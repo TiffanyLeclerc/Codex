@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更正作業 - 受款人 (op6_edit2.html)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+      body { background-color: #fff; }
+      .card-header { display: flex; justify-content: space-between; align-items: center; }
+      .btn-toolbar { justify-content: flex-end; }
+      .col-form-label .required { color: red; font-weight: bold; margin-right: 2px; }
+      /* 與 op6_edit 對齊：顯示值為扁平文字，減少垂直空隙 */
+      .form-text-display { padding-top: 0; padding-bottom: 0; margin-bottom: 0; font-size: 1rem; line-height: 1.4; color: #212529; font-weight: bold; min-height: 0; display: inline; }
+      .col-form-label:not(.no-colon)::after { content: '：'; }
+      .form-control.size-auto, .form-select.size-auto, .input-group.size-auto { width: auto; display: inline-flex; }
+      .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
+      .nav-tabs .nav-link { white-space: nowrap; }
+      .demo-switcher { background-color: #fff3cd; border: 1px solid #ffeeba; }
+      .form-check-label { margin-left: 0.5rem; }
+
+      .form-field-container {
+        display: flex;
+        align-items: baseline;
+        width: 100%;
+        gap: 0;
+      }
+      .form-field-container .col-form-label {
+        flex-shrink: 0;
+        text-align: left;
+        padding-right: 0; /* 與 op6_edit 對齊 */
+        white-space: nowrap;
+        min-width: auto; /* 與 op6_edit 對齊 */
+      }
+      .form-field-container .field-content {
+        flex-grow: 1; /* 與 op6_edit 對齊 */
+      }
+      
+      .validation-error {
+        color: red;
+        font-size: 0.875em;
+        margin-top: 0.25rem; /* 與 op6_edit 錯誤訊息間距一致 */
+      }
+
+      .tab-content {
+        padding: 2.5rem !important;
+      }
+      
+      .flex-form-container {
+        display: flex;
+        flex-wrap: wrap;
+        margin-left: -1.5rem;  /* 與 op6_edit 對齊 */
+        margin-right: -1.5rem; /* 與 op6_edit 對齊 */
+        align-items: baseline;
+      }
+
+      .flex-form-container + .flex-form-container, .beneficiary-section + .beneficiary-section {
+          margin-top: 2rem;
+          padding-top: 2rem;
+          border-top: 1px solid #dee2e6;
+      }
+      
+      .heir-detail-block + .heir-detail-block {
+          border-top: 1px dashed #ccc;
+          margin-top: 2rem;
+          padding-top: 2rem;
+      }
+
+      .flex-form-item {
+        flex: 0 0 33.3333%;
+        max-width: 33.3333%;
+        padding-left: 1.5rem;  /* 與 op6_edit 對齊 */
+        padding-right: 1.5rem; /* 與 op6_edit 對齊 */
+        margin-bottom: 1.25rem; /* 與 op6_edit 對齊 */
+        box-sizing: border-box;
+      }
+      
+      .flex-form-item-half {
+        flex: 0 0 50%;
+        max-width: 50%;
+      }
+
+      .flex-form-item-full {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+      
+      .text-danger {
+          color: red !important;
+      }
+      .input-group .form-control {
+        margin: 0 2px;
+      }
+      #amountSplitModal .form-control {
+          text-align: right;
+      }
+      /* 與 op6_edit 對齊：頁籤上方欄位使用 header-grid 縮小縱向間距 */
+      .header-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 16px; row-gap: 8px; margin: 0; }
+      .header-grid .flex-form-item { padding: 0; margin: 0; max-width: none; flex: initial; }
+
+      /* 純 CSS 資料清單（取代表格、捨棄 bootstrap 表格版型） */
+      .list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+      .list-grid { border: 1px solid #dee2e6; border-radius: .25rem; overflow: hidden; width: 100%; }
+      /* 使用比例欄寬，避免超出螢幕；內容過長以省略號顯示 */
+      .list-row { display: grid; grid-template-columns: 0.5fr 0.8fr 0.8fr 1.2fr 1.2fr 0.9fr 0.9fr 0.9fr 1.2fr; align-items: center; }
+      .list-row .cell { padding: .5rem .75rem; border-bottom: 1px solid #eee; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .list-head { background: #f8f9fa; font-weight: bold; }
+      .list-body .list-row:last-child .cell { border-bottom: none; }
+      .op-col-actions { display: flex; gap: .5rem; justify-content: center; }
+
+      /* 繼承人清單（較少欄） */
+      .heir-list-row { display: grid; grid-template-columns: 0.6fr 0.8fr 1.4fr 1.4fr 1fr; align-items: center; }
+      .heir-list-row .cell { padding: .5rem .75rem; border-bottom: 1px solid #eee; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .heir-list-head { background: #f8f9fa; font-weight: bold; }
+      .heir-list-body .heir-list-row:last-child .cell { border-bottom: none; }
+
+      /* 響應式微調（窄螢幕時增加可讀性） */
+      @media (max-width: 1024px) {
+        .list-row { grid-template-columns: 0.5fr 0.8fr 0.8fr 1fr 1fr 0.8fr 0.8fr 0.8fr 1fr; }
+        .heir-list-row { grid-template-columns: 0.5fr 0.7fr 1.2fr 1.2fr 1fr; }
+      }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div id="modification-page">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">更正作業</h2>
+                    <div id="common-buttons" class="btn-toolbar" role="toolbar">
+                        <button id="btn-confirm" type="button" class="btn btn-primary me-2"><i class="bi bi-check-circle"></i> 確認</button>
+                        <button id="btn-print-checklist" type="button" class="btn btn-info me-2" disabled><i class="bi bi-printer"></i> 受理審核清單列印</button>
+                        <button id="btn-prepare-approval" type="button" class="btn btn-success me-2"><i class="bi bi-send-check"></i> 審核</button>
+                        <button id="btn-split-amount" type="button" class="btn btn-warning me-2"><i class="bi bi-distribute-vertical"></i> 金額分割</button>
+                        <button id="btn-cancel-case" type="button" class="btn btn-danger me-2"><i class="bi bi-trash"></i> 註銷本案</button>
+                        <button id="btn-print-pdf" type="button" class="btn btn-light border me-2"><i class="bi bi-file-earmark-pdf"></i> 頁面(或pdf)列印</button>
+                        <button id="btn-return" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> 返回</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="p-3 mb-3 rounded demo-switcher">
+                        <div class="row align-items-center">
+                            <div class="col-auto"><strong class="text-danger"><i class="bi bi-tools"></i> 情境快速切換器 (Demo專用)</strong></div>
+                            <div class="col-auto"><label for="demoClaimTypeSwitcher" class="col-form-label">切換請領種類查看介面變化</label></div>
+                            <div class="col-auto"><select id="demoClaimTypeSwitcher" class="form-select size-auto"></select></div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 mb-3 border bg-white rounded">
+                         <div class="form-field-container">
+                            <label class="col-form-label">請領種類</label>
+                            <div class="field-content"><p id="display-claim-type" class="form-text-display mb-0"></p></div>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-basic" href="op6_edit.html">基本資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link active" id="tab-beneficiary" href="op6_edit2.html">受款人</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-approval-letter" href="op6_edit3.html">核定函</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-issuance-data" href="op6_edit4.html">請領核發資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-other-benefits" href="op6_edit5.html">請領其他給付資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-pension-changes" href="op6_edit6.html">勞退個人異動查詢</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-account-details" href="op6_edit7.html">個人專戶明細資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-case-notes" href="op6_edit8.html">案件記事</a></li>
+                    </ul>
+
+                    <div class="tab-content border border-top-0" id="myTabContent">
+                        <div class="tab-pane fade show active" id="pane-beneficiary" role="tabpanel">
+                           
+                           <div class="flex-form-container header-grid">
+                               <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">受理編號</label><div class="field-content"><p id="display-case-id" class="form-text-display"></p></div></div></div>
+                               <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">版次</label><div class="field-content"><p id="display-version" class="form-text-display"></p></div></div></div>
+                               <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工姓名</label><div class="field-content"><p id="display-laborer-name" class="form-text-display"></p></div></div></div>
+                               <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工身分證字號</label><div class="field-content"><p id="display-laborer-id" class="form-text-display"></p></div></div></div>
+                               <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工出生日期</label><div class="field-content"><p id="display-laborer-dob" class="form-text-display"></p></div></div></div>
+                               <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label text-danger">勞工死亡日期</label><div class="field-content"><p id="display-laborer-dod" class="form-text-display text-danger"></p></div></div></div>
+                               <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label text-danger">民法繼承案件</label><div class="field-content"><p id="display-civil-law-inheritance" class="form-text-display text-danger"></p></div></div></div>
+                               <div class="flex-form-item" data-claim-type-show="51,52,53"><div class="form-field-container"><label class="col-form-label">核定金額</label><div class="field-content"><p id="display-approved-amount" class="form-text-display">1,605,000</p></div></div></div>
+                               <div class="flex-form-item" data-claim-type-show="51,52,53"><div class="form-field-container"><label class="col-form-label">請領人數</label><div class="field-content"><p id="display-applicant-count" class="form-text-display">2</p></div></div></div>
+                           </div>
+
+                           <div id="beneficiary-list-area" class="mt-4">
+                                <div class="list-header">
+                                    <h4 class="mb-0">受款人資料</h4>
+                                    <div id="btn-add-beneficiary-container" data-claim-type-show="51,52,53">
+                                        <button id="btn-add-beneficiary" class="btn btn-success"><i class="bi bi-plus-circle"></i> 新增</button>
+                                    </div>
+                                </div>
+                                <div class="list-grid" id="beneficiary-table">
+                                    <div class="list-row list-head">
+                                        <div class="cell">序號</div>
+                                        <div class="cell">指定匯入帳號</div>
+                                        <div class="cell">關係</div>
+                                        <div class="cell">申請人姓名</div>
+                                        <div class="cell">身分證字號</div>
+                                        <div class="cell">可領金額</div>
+                                        <div class="cell">扣減金額</div>
+                                        <div class="cell">實發金額</div>
+                                        <div class="cell">操作</div>
+                                    </div>
+                                    <div class="list-body" id="beneficiary-table-body">
+                                        <div class="list-row beneficiary-row">
+                                            <div class="cell">1</div>
+                                            <div class="cell"><input class="form-check-input" type="checkbox" checked></div>
+                                            <div class="cell">配偶</div>
+                                            <div class="cell">林美玲</div>
+                                            <div class="cell">F234567890</div>
+                                            <div class="cell">1,605,000</div>
+                                            <div class="cell">0</div>
+                                            <div class="cell">1,605,000</div>
+                                            <div class="cell op-col-actions"><button class="btn btn-sm btn-outline-primary me-1 btn-modify" title="修改"><i class="bi bi-pencil-square"></i> 修改</button><button class="btn btn-sm btn-outline-danger btn-delete" title="刪除"><i class="bi bi-trash"></i> 刪除</button></div>
+                                        </div>
+                                        <div class="list-row beneficiary-row">
+                                            <div class="cell">2</div>
+                                            <div class="cell"><input class="form-check-input" type="checkbox"></div>
+                                            <div class="cell">子女</div>
+                                            <div class="cell">王小明</div>
+                                            <div class="cell">A123456780</div>
+                                            <div class="cell">0</div>
+                                            <div class="cell">0</div>
+                                            <div class="cell">0</div>
+                                            <div class="cell op-col-actions"><button class="btn btn-sm btn-outline-primary me-1 btn-modify" title="修改"><i class="bi bi-pencil-square"></i> 修改</button><button class="btn btn-sm btn-outline-danger btn-delete" title="刪除"><i class="bi bi-trash"></i> 刪除</button></div>
+                                        </div>
+                                    </div>
+                                </div>
+                           </div>
+
+                           <div id="beneficiary-maintenance-area" class="mt-4" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h4 class="mb-0">受款人資料維護</h4>
+                                    <div id="beneficiary-maintenance-buttons">
+                                        <button id="btn-save-beneficiary" type="button" class="btn btn-primary me-2"><i class="bi bi-check-circle"></i> 確認</button>
+                                        <button id="btn-clear-beneficiary-form" type="button" class="btn btn-warning me-2"><i class="bi bi-eraser"></i> 清除</button>
+                                        <button id="btn-return-to-list" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> 返回</button>
+                                    </div>
+                                </div>
+                                <div class="beneficiary-section">
+                                    <div class="flex-form-container">
+                                        <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>請領人序</label><div class="field-content"><p id="ben-seq" class="form-text-display">1</p></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="ben-name" class="col-form-label"><span class="required">*</span>請領人姓名</label><div class="field-content"><input type="text" id="ben-name" class="form-control" maxlength="200" value="林美玲"></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="ben-id" class="col-form-label"><span class="required">*</span>身分證字號</label><div class="field-content"><input type="text" id="ben-id" class="form-control" maxlength="10" value="F234567890"></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="ben-dob" class="col-form-label"><span class="required">*</span>出生日期</label><div class="field-content"><input type="text" id="ben-dob" class="form-control" maxlength="7" placeholder="例: 0650101" value="0650101"></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="ben-relation" class="col-form-label"><span class="required">*</span>關係</label><div class="field-content"><select id="ben-relation" class="form-select"><option value="">-- 請選擇 --</option><option value="1">1-本人</option><option value="2">2-配偶</option><option value="3">3-父母</option><option value="4">4-子女</option><option value="5">5-祖父母</option><option value="6">6-兄弟姊妹</option><option value="7">7-孫子女</option><option value="8">8-遺囑指定請領人</option><option value="9">9-其他</option><option value="A">A-遺囑指定監護人</option><option value="B">B-法院選定監護人</option><option value="E">E-受委託代領人</option><option value="Z">Z-法院扣押</option></select></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="ben-phone" class="col-form-label">電話</label><div class="field-content"><input type="text" id="ben-phone" class="form-control" maxlength="20"></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="ben-mobile" class="col-form-label">行動電話</label><div class="field-content"><input type="text" id="ben-mobile" class="form-control" maxlength="20"></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="ben-payout-method" class="col-form-label"><span class="required">*</span>核發方式</label><div class="field-content"><select id="ben-payout-method" class="form-select"><option value="">-- 請選擇 --</option><option value="1">1-金融機構</option><option value="2">2-郵局</option><option value="3">3-本局開立支票</option><option value="4">4-郵寄匯票</option><option value="5">5-國外匯款</option><option value="7">7-緊急電匯</option><option value="8">8-電匯</option><option value="A">A-郵寄支票</option></select></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="ben-address-type" class="col-form-label"><span class="required">*</span>地址</label><div class="field-content"><select id="ben-address-type" class="form-select"><option value="戶籍地址">戶籍地址</option><option value="現住址">現住址</option></select></div></div></div>
+                                        <div class="flex-form-item flex-form-item-full"><div class="form-field-container"><label for="ben-zip" class="col-form-label"><span class="required">*</span>郵遞區號</label><div class="field-content input-group" id="ben-address-group"><input type="text" id="ben-zip" class="form-control address-zip" style="flex: 0 0 80px;" maxlength="6"><select id="ben-address-city" class="form-select address-city" style="flex: 0 0 150px;"><option value="">請選擇縣市</option></select><select id="ben-address-district" class="form-select address-district" style="flex: 0 0 150px;"><option value="">請選擇鄉鎮市區</option></select><input type="text" id="ben-address-street" class="form-control" maxlength="80"></div></div></div>
+                                        <div class="flex-form-item" data-claim-type-show="31,32,41,42,43,46">
+                                            <div class="form-field-container">
+                                                <label for="ben-special-account-note" class="col-form-label">專戶註記</label>
+                                                <div class="field-content">
+                                                    <select id="ben-special-account-note" class="form-select">
+                                                        <option value="">-- 請選擇 --</option>
+                                                        <option value="已提供專戶帳號">已提供專戶帳號</option>
+                                                        <option value="申請專戶">申請專戶</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-form-container" data-payout-method="1,2,7,8">
+                                        <div class="flex-form-item flex-form-item-half"><div class="form-field-container"><label for="ben-account-branch" class="col-form-label"><span class="required">*</span>帳號</label><div class="field-content input-group"><input type="text" id="ben-account-branch" class="form-control" maxlength="3"><input type="text" id="ben-account-bank" class="form-control" maxlength="4"><input type="text" id="ben-account-number" class="form-control" maxlength="15"></div></div></div>
+                                        <div class="flex-form-item flex-form-item-half"><div class="form-field-container"><label for="ben-account-branch-2" class="col-form-label"><span class="required">*</span>帳號(複驗)</label><div class="field-content input-group"><input type="text" id="ben-account-branch-2" class="form-control" maxlength="3"><input type="text" id="ben-account-bank-2" class="form-control" maxlength="4"><input type="text" id="ben-account-number-2" class="form-control" maxlength="15"></div></div></div>
+                                    </div>
+                                    <div class="flex-form-container" data-payout-method="5" style="display:none;">
+                                         <div class="flex-form-item-half"><div class="form-field-container"><label for="foreign-account" class="col-form-label"><span class="required">*</span>帳號</label><div class="field-content"><input type="text" id="foreign-account" class="form-control size-auto" size="36" maxlength="38"></div></div></div>
+                                         <div class="flex-form-item-half"><div class="form-field-container"><label for="foreign-swift" class="col-form-label">swiftcode(8或11碼)</label><div class="field-content"><input type="text" id="foreign-swift" class="form-control size-auto" size="11" maxlength="13"></div></div></div>
+                                         <div class="flex-form-item-half"><div class="form-field-container"><label for="foreign-bank-name" class="col-form-label">金融機構名稱</label><div class="field-content"><input type="text" id="foreign-bank-name" class="form-control size-auto" size="40" maxlength="42"></div></div></div>
+                                         <div class="flex-form-item-full"><div class="form-field-container"><label for="foreign-bank-address" class="col-form-label">金融機構地址</label><div class="field-content"><input type="text" id="foreign-bank-address" class="form-control" maxlength="200"></div></div></div>
+                                         <div class="flex-form-item-half"><div class="form-field-container"><label for="foreign-name" class="col-form-label">戶名</label><div class="field-content"><input type="text" id="foreign-name" class="form-control size-auto" size="25" maxlength="200"></div></div></div>
+                                         <div class="flex-form-item-half"><div class="form-field-container"><label for="foreign-addr-country" class="col-form-label">受款人國外地址-國別</label><div class="field-content"><select id="foreign-addr-country" class="form-select"></select></div></div></div>
+                                         <div class="flex-form-item-half"><div class="form-field-container"><label for="foreign-addr-town" class="col-form-label">受款人國外地址-城鎮</label><div class="field-content"><input type="text" id="foreign-addr-town" class="form-control size-auto" size="35" maxlength="37"></div></div></div>
+                                         <div class="flex-form-item-full"><div class="form-field-container"><label for="foreign-addr-street" class="col-form-label">受款人國外地址-地址</label><div class="field-content"><input type="text" id="foreign-addr-street" class="form-control" maxlength="150"></div></div></div>
+                                    </div>
+                                </div>
+                                <div class="beneficiary-section">
+                                    <h5 class="mb-3">法定代理人資料</h5>
+                                    <div class="flex-form-container">
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="legal-rep-name" class="col-form-label">法定代理人姓名</label><div class="field-content"><input type="text" id="legal-rep-name" class="form-control" maxlength="200"></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="legal-rep-id" class="col-form-label">法定代理人身分證字號</label><div class="field-content"><input type="text" id="legal-rep-id" class="form-control" maxlength="10"></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="legal-rep-dob" class="col-form-label">法定代理人出生日期</label><div class="field-content"><input type="text" id="legal-rep-dob" class="form-control" maxlength="7"></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label for="legal-rep-relation" class="col-form-label">與請領人關係</label><div class="field-content"><select id="legal-rep-relation" class="form-select"><option value="2">2-配偶</option><option value="3">3-父母</option><option value="4">4-子女</option><option value="5">5-祖父母</option><option value="6">6-兄弟姊妹</option><option value="7">7-孫子女</option><option value="8">8-遺囑指定請領人</option><option value="9">9-其他</option><option value="A">A-遺囑指定監護人</option><option value="B">B-法院選定監護人</option><option value="E">E-受委託代領人</option><option value="Z">Z-法院扣押</option></select></div></div></div>
+                                    </div>
+                                </div>
+
+                                <div id="heir-data-area" class="beneficiary-section" style="display: none;">
+                                    <h5 class="mb-3 text-primary">繼承人資料區</h5>
+                                    <div class="flex-form-container">
+                                        <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">聲明繼承日期</label><div class="field-content"><input type="text" class="form-control" maxlength="7"></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">繼承人申請方式</label><div class="field-content"><select class="form-select"><option value="1">1-共同委任</option><option value="2">2-共同申請</option></select></div></div></div>
+                                        <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">繼承人數</label><div class="field-content"><input type="text" id="heir-count" class="form-control" maxlength="3" value="2"></div></div></div>
+                                    </div>
+                                    
+                                    <div id="heir-list-area" class="mt-4" style="display: none;">
+                                        <div class="list-header">
+                                            <h6 class="mb-0 text-secondary">繼承人清單</h6>
+                                            <button id="btn-add-heir" class="btn btn-sm btn-outline-success"><i class="bi bi-person-plus"></i> 新增繼承人</button>
+                                        </div>
+                                        <div class="list-grid">
+                                            <div class="heir-list-row heir-list-head">
+                                                <div class="cell">序號</div>
+                                                <div class="cell">關係</div>
+                                                <div class="cell">繼承人姓名</div>
+                                                <div class="cell">身分證字號</div>
+                                                <div class="cell">操作</div>
+                                            </div>
+                                            <div class="heir-list-body" id="heir-table-body"></div>
+                                        </div>
+                                    </div>
+
+                                    <div id="heir-details-container" class="pt-3" style="display: none;"></div>
+
+                                    <template id="heir-detail-template">
+                                        <div class="heir-detail-block">
+                                            <div class="flex-form-container">
+                                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>申請人序</label><div class="field-content"><p class="form-text-display heir-seq">1</p></div></div></div>
+                                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label no-colon">共同委任人</label><div class="field-content pt-2"><input type="checkbox" class="form-check-input"></div></div></div>
+                                                <div class="flex-form-item"></div>
+                                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>申請人姓名</label><div class="field-content"><input type="text" class="form-control heir-name" id="heir-name"></div></div></div>
+                                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>身分證字號</label><div class="field-content"><input type="text" class="form-control heir-id" id="heir-id" maxlength="10"></div></div></div>
+                                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>出生日期</label><div class="field-content"><input type="text" class="form-control" id="heir-dob"></div></div></div>
+                                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>關係</label><div class="field-content"><select class="form-select heir-relation" id="heir-relation"><option value="2">2-配偶</option><option value="4" selected>4-子女</option></select></div></div></div>
+                                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">電話</label><div class="field-content"><input type="text" class="form-control" id="heir-phone"></div></div></div>
+                                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">行動電話</label><div class="field-content"><input type="text" class="form-control" id="heir-mobile"></div></div></div>
+                                            </div>
+                                            <div class="flex-form-container">
+                                                <div class="flex-form-item flex-form-item-full"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>地址</label><div class="field-content d-flex align-items-center"><select class="form-select heir-address-type" style="flex:0 0 150px;" id="heir-address-type"><option value="戶籍地址">戶籍地址</option><option value="現住址">現住址</option></select><div class="form-check ms-3"><input type="checkbox" class="form-check-input heir-addr-same-as-prev"><label class="form-check-label no-colon">地址-同上</label></div></div></div>
+                                                <div class="flex-form-item flex-form-item-full"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>郵遞區號</label><div class="field-content input-group heir-address-group"><input type="text" class="form-control heir-zip" style="flex: 0 0 80px;" disabled id="heir-zip"><select class="form-select heir-city" style="flex: 0 0 150px;" disabled id="heir-city"><option value="">請選擇縣市</option></select><select class="form-select heir-district" style="flex: 0 0 150px;" disabled id="heir-district"><option value="">請選擇鄉鎮市區</option></select><input type="text" class="form-control heir-street" disabled id="heir-street"></div></div></div>
+                                            </div>
+                                            <div class="flex-form-container">
+                                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>核發方式</label><div class="field-content"><select class="form-select heir-payout-method" id="heir-payout-method"><option value="">-- 請選擇 --</option><option value="1">1-金融機構</option><option value="2">2-郵局</option><option value="3">3-本局開立支票</option><option value="4">4-郵寄匯票</option><option value="5">5-國外匯款</option><option value="7">7-緊急電匯</option><option value="8">8-電匯</option><option value="A">A-郵寄支票</option></select></div></div></div>
+                                            </div>
+                                            <div class="flex-form-container" data-heir-payout-method="1,2,7,8" style="display:none;">
+                                                <div class="flex-form-item flex-form-item-half"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>帳號</label><div class="field-content input-group"><input type="text" class="form-control" maxlength="3" id="heir-account-branch"><input type="text" class="form-control heir-account-bank" maxlength="4" id="heir-account-bank"><input type="text" class="form-control" maxlength="15" id="heir-account-number"></div></div></div>
+                                                <div class="flex-form-item flex-form-item-half"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>帳號(複驗)</label><div class="field-content input-group"><input type="text" class="form-control" maxlength="3" id="heir-account-branch-2"><input type="text" class="form-control heir-account-bank" maxlength="4" id="heir-account-bank-2"><input type="text" class="form-control" maxlength="15" id="heir-account-number-2"></div></div></div>
+                                            </div>
+                                            <div class="flex-form-container" data-heir-payout-method="5" style="display:none;">
+                                                <div class="flex-form-item flex-form-item-half"><div class="form-field-container"><label class="col-form-label"><span class="required">*</span>帳號</label><div class="field-content"><input type="text" class="form-control size-auto heir-foreign-account" size="36" maxlength="38"></div></div></div>
+                                                <div class="flex-form-item flex-form-item-half"><div class="form-field-container"><label class="col-form-label">swiftcode(8或11碼)</label><div class="field-content"><input type="text" class="form-control size-auto heir-foreign-swift" size="11" maxlength="13"></div></div></div>
+                                                <div class="flex-form-item flex-form-item-half"><div class="form-field-container"><label class="col-form-label">金融機構名稱</label><div class="field-content"><input type="text" class="form-control size-auto heir-foreign-bank-name" size="40" maxlength="42"></div></div></div>
+                                                <div class="flex-form-item flex-form-item-full"><div class="form-field-container"><label class="col-form-label">金融機構地址</label><div class="field-content"><input type="text" class="form-control heir-foreign-bank-address" maxlength="200"></div></div></div>
+                                                <div class="flex-form-item flex-form-item-half"><div class="form-field-container"><label class="col-form-label">戶名</label><div class="field-content"><input type="text" class="form-control size-auto heir-foreign-name" size="25" maxlength="200"></div></div></div>
+                                                <div class="flex-form-item flex-form-item-half"><div class="form-field-container"><label class="col-form-label">繼承人國外地址-國別</label><div class="field-content"><select class="form-select heir-foreign-addr-country"></select></div></div></div>
+                                                <div class="flex-form-item flex-form-item-half"><div class="form-field-container"><label class="col-form-label">繼承人國外地址-城鎮</label><div class="field-content"><input type="text" class="form-control size-auto heir-foreign-addr-town" size="35" maxlength="37"></div></div></div>
+                                                <div class="flex-form-item flex-form-item-full"><div class="form-field-container"><label class="col-form-label">繼承人國外地址-地址</label><div class="field-content"><input type="text" class="form-control heir-foreign-addr-street" maxlength="150"></div></div></div>
+                                            </div>
+                                            <div class="beneficiary-section border-top pt-4 mt-4">
+                                                <h6 class="mb-3">法定代理人資料</h6>
+                                                <div class="flex-form-container">
+                                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">法定代理人姓名</label><div class="field-content"><input type="text" class="form-control" maxlength="200"></div></div></div>
+                                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">法定代理人身分證字號</label><div class="field-content"><input type="text" class="form-control" maxlength="10"></div></div></div>
+                                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">法定代理人出生日期</label><div class="field-content"><input type="text" class="form-control" maxlength="7"></div></div></div>
+                                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">與請領人關係</label><div class="field-content"><select class="form-select"><option value="2">2-配偶</option><option value="3">3-父母</option><option value="4">4-子女</option><option value="5">5-祖父母</option><option value="6">6-兄弟姊妹</option><option value="7">7-孫子女</option><option value="8">8-遺囑指定請領人</option><option value="9">9-其他</option><option value="A">A-遺囑指定監護人</option><option value="B">B-法院選定監護人</option><option value="E">E-受委託代領人</option><option value="Z">Z-法院扣押</option></select></div></div></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="text-center mt-3">
+                                                <button type="button" class="btn btn-sm btn-primary me-2 btn-save-heir"><i class="bi bi-check-circle"></i> 儲存繼承人</button>
+                                                <button type="button" class="btn btn-sm btn-secondary btn-return-heir-list"><i class="bi bi-arrow-left-circle"></i> 返回清單</button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="amountSplitModal" tabindex="-1" aria-labelledby="amountSplitModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="amountSplitModalLabel">金額分割</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text">可分配總金額</span>
+                                <input type="text" id="total-allocatable-amount" class="form-control" value="1,605,000" disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="input-group">
+                                <span class="input-group-text">總受款人數</span>
+                                <input type="text" class="form-control" value="2" disabled>
+                            </div>
+                        </div>
+                         <div class="col-md-5 d-flex align-items-center">
+                            <p class="text-danger mb-0">※請輸入每位受款人之分配金額或百分比</p>
+                        </div>
+                    </div>
+                    <table class="table table-bordered text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>序號</th>
+                                <th>受款人姓名</th>
+                                <th>分配金額</th>
+                                <th>分配百分比(%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="split-table-body">
+                            
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning"><i class="bi bi-eraser"></i> 清除</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-arrow-left-circle"></i> 返回</button>
+                    <button type="button" id="btn-split-confirm" class="btn btn-primary"><i class="bi bi-check-circle"></i> 確認</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const caseIdFromUrl = urlParams.get('caseId');
+        const caseIdCanonical = caseIdFromUrl || (function(){ try { return sessionStorage.getItem('op6_current_case_id'); } catch(e) { return null; } })() || 'demo_case_01';
+        const storageKey = `op6_edit_state_${caseIdCanonical}`;
+        const checklistEnabledKey = `op6_checklist_enabled_${caseIdFromUrl || 'demo_case_01'}`;
+        const tempNewBenKey = `temp_new_beneficiary_${caseIdFromUrl || 'demo_case_01'}`;
+        const tempNewHeirKey = `temp_new_heir_${caseIdFromUrl || 'demo_case_01'}`;
+
+        const claimTypeMap = { '31': '提前請領退休金(31)', '32': '提前請領月退休金(32)', '41': '一次退休金(41)', '42': '月退休金(42)', '43': '續提退休金(43)', '46': '續提月退休金(46)', '51': '死亡退休金(51)', '52': '月退死亡退休金(52)', '53': '死亡退休金(含月退)(53)' };
+        
+        const countryData = { "TWN": "臺灣", "USA": "美國", "JPN": "日本", "CHN": "中國大陸", "HKG": "香港", "MAC": "澳門", "SGP": "新加坡", "MYS": "馬來西亞", "AUS": "澳大利亞", "CAN": "加拿大", "GBR": "英國", "FRA": "法國", "DEU": "德國", "THA": "泰國", "VNM": "越南", "IDN": "印尼", "PHL": "菲律賓", "KOR": "韓國" };
+
+        // --- Demo Data ---
+        const mockBeneficiaryDetails = {
+            "F234567890": { // 林美玲
+                dob: "0650101", phone: "02-23456789", mobile: "0912-345678", payoutMethod: "2", addressType: "戶籍地址", zip: "100", city: "臺北市", district: "中正區", street: "重慶南路一段122號", account: ["700", "0001234", "5678901"],
+                heirs: [
+                    { seq: '1', relation: '子女', name: '王大寶', id: 'A111222333' },
+                    { seq: '2', relation: '子女', name: '王小寶', id: 'A222333444' }
+                ]
+            },
+            "A123456780": { // 王小明
+                dob: "0950315", phone: "04-22289111", mobile: "0988-765432", payoutMethod: "1", addressType: "現住址", zip: "407", city: "臺中市", district: "西屯區", street: "台灣大道三段99號", account: ["007", "1234", "555666777"],
+                heirs: []
+            }
+        };
+        const mockHeirDetails = {
+            "A111222333": { // 王大寶
+                dob: "1000101", phone: "02-11112222", mobile: "0911-111111", payoutMethod: "2", addressType: "戶籍地址", zip: "220", city: "新北市", district: "板橋區", street: "中山路一段1號", account: ["700", "1112223", "3445566"]
+            },
+            "A222333444": { // 王小寶
+                dob: "1020202", phone: "02-33334444", mobile: "0922-222222", payoutMethod: "1", addressType: "現住址", zip: "110", city: "臺北市", district: "信義區", street: "市府路1號", account: ["008", "5566", "123123123"]
+            }
+        };
+        // --- End Demo Data ---
+
+        const taiwanDistrictsAndZips = {
+            "臺北市": [{ zip: "100", name: "中正區" }, { zip: "103", name: "大同區" }, { zip: "104", name: "中山區" }, { zip: "105", name: "松山區" }, { zip: "106", name: "大安區" }, { zip: "108", name: "萬華區" }, { zip: "110", name: "信義區" }, { zip: "111", name: "士林區" }, { zip: "112", name: "北投區" }, { zip: "114", name: "內湖區" }, { zip: "115", name: "南港區" }, { zip: "116", name: "文山區" }],
+            "新北市": [{ zip: "207", name: "萬里區" }, { zip: "208", name: "金山區" }, { zip: "220", name: "板橋區" }, { zip: "221", name: "汐止區" }, { zip: "222", name: "深坑區" }, { zip: "223", name: "石碇區" }, { zip: "224", name: "瑞芳區" }, { zip: "226", name: "平溪區" }, { zip: "227", name: "雙溪區" }, { zip: "228", name: "貢寮區" }, { zip: "231", name: "新店區" }, { zip: "232", name: "坪林區" }, { zip: "233", name: "烏來區" }, { zip: "234", name: "永和區" }, { zip: "235", name: "中和區" }, { zip: "236", name: "土城區" }, { zip: "237", name: "三峽區" }, { zip: "238", name: "樹林區" }, { zip: "239", name: "鶯歌區" }, { zip: "241", name: "三重區" }, { zip: "242", name: "新莊區" }, { zip: "243", name: "泰山區" }, { zip: "244", name: "林口區" }, { zip: "247", name: "蘆洲區" }, { zip: "248", name: "五股區" }, { zip: "249", name: "八里區" }, { zip: "251", name: "淡水區" }, { zip: "252", name: "三芝區" }, { zip: "253", name: "石門區" }],
+            "桃園市": [{ zip: "320", name: "中壢區" }, { zip: "324", name: "平鎮區" }, { zip: "325", name: "龍潭區" }, { zip: "326", name: "楊梅區" }, { zip: "327", name: "新屋區" }, { zip: "328", name: "觀音區" }, { zip: "330", name: "桃園區" }, { zip: "333", name: "龜山區" }, { zip: "334", name: "八德區" }, { zip: "335", name: "大溪區" }, { zip: "336", name: "復興區" }, { zip: "337", name: "大園區" }, { zip: "338", name: "蘆竹區" }],
+            "臺中市": [{ zip: "400", name: "中區" }, { zip: "401", name: "東區" }, { zip: "402", name: "南區" }, { zip: "403", name: "西區" }, { zip: "404", name: "北區" }, { zip: "406", name: "北屯區" }, { zip: "407", name: "西屯區" }, { zip: "408", name: "南屯區" }, { zip: "406", name: "太平區" }, { zip: "412", name: "大里區" }, { zip: "413", name: "霧峰區" }, { zip: "414", name: "烏日區" }, { zip: "420", name: "豐原區" }, { zip: "421", name: "后里區" }, { zip: "422", name: "石岡區" }, { zip: "423", name: "東勢區" }, { zip: "424", name: "和平區" }, { zip: "426", name: "新社區" }, { zip: "427", name: "潭子區" }, { zip: "428", name: "大雅區" }, { zip: "429", name: "神岡區" }, { zip: "432", name: "大肚區" }, { zip: "433", name: "沙鹿區" }, { zip: "434", name: "龍井區" }, { zip: "435", name: "梧棲區" }, { zip: "436", name: "清水區" }, { zip: "437", name: "大甲區" }, { zip: "438", name: "外埔區" }, { zip: "439", name: "大安區" }],
+            "臺南市": [{ zip: "700", name: "中西區" }, { zip: "701", name: "東區" }, { zip: "702", name: "南區" }, { zip: "704", name: "北區" }, { zip: "708", name: "安平區" }, { zip: "709", name: "安南區" }, { zip: "710", name: "永康區" }, { zip: "711", name: "歸仁區" }, { zip: "712", name: "新化區" }, { zip: "713", name: "左鎮區" }, { zip: "714", name: "玉井區" }, { zip: "715", name: "楠西區" }, { zip: "716", name: "南化區" }, { zip: "717", name: "仁德區" }, { zip: "718", name: "關廟區" }, { zip: "719", name: "龍崎區" }, { zip: "720", name: "官田區" }, { zip: "721", name: "麻豆區" }, { zip: "722", name: "佳里區" }, { zip: "723", name: "西港區" }, { zip: "724", name: "七股區" }, { zip: "725", name: "將軍區" }, { zip: "726", name: "學甲區" }, { zip: "727", name: "北門區" }, { zip: "730", name: "新營區" }, { zip: "731", name: "後壁區" }, { zip: "732", name: "白河區" }, { zip: "733", name: "東山區" }, { zip: "734", name: "六甲區" }, { zip: "735", name: "下營區" }, { zip: "736", name: "柳營區" }, { zip: "737", name: "鹽水區" }, { zip: "741", name: "善化區" }, { zip: "742", name: "大內區" }, { zip: "743", name: "山上區" }, { zip: "744", name: "新市區" }, { zip: "745", name: "安定區" }],
+            "高雄市": [{ zip: "800", name: "新興區" }, { zip: "801", name: "前金區" }, { zip: "802", name: "苓雅區" }, { zip: "803", name: "鹽埕區" }, { zip: "804", name: "鼓山區" }, { zip: "805", name: "旗津區" }, { zip: "806", name: "前鎮區" }, { zip: "807", name: "三民區" }, { zip: "811", name: "楠梓區" }, { zip: "812", name: "小港區" }, { zip: "813", name: "左營區" }, { zip: "814", name: "仁武區" }, { zip: "815", name: "大社區" }, { zip: "820", name: "岡山區" }, { zip: "821", name: "路竹區" }, { zip: "822", name: "阿蓮區" }, { zip: "823", name: "田寮區" }, { zip: "824", name: "燕巢區" }, { zip: "825", name: "橋頭區" }, { zip: "826", name: "梓官區" }, { zip: "827", name: "彌陀區" }, { zip: "828", name: "永安區" }, { zip: "829", name: "湖內區" }, { zip: "830", name: "鳳山區" }, { zip: "831", name: "大寮區" }, { zip: "832", name: "林園區" }, { zip: "833", name: "鳥松區" }, { zip: "840", name: "大樹區" }, { zip: "842", name: "旗山區" }, { zip: "843", name: "美濃區" }, { zip: "844", name: "六龜區" }, { zip: "845", name: "內門區" }, { zip: "846", name: "杉林區" }, { zip: "847", name: "甲仙區" }, { zip: "848", name: "桃源區" }, { zip: "849", name: "那瑪夏區" }, { zip: "851", name: "茂林區" }, { zip: "852", name: "茄萣區" }],
+            "基隆市": [{ zip: "200", name: "仁愛區" }, { zip: "201", name: "信義區" }, { zip: "202", name: "中正區" }, { zip: "203", name: "中山區" }, { zip: "204", name: "安樂區" }, { zip: "205", name: "暖暖區" }, { zip: "206", name: "七堵區" }],
+            "新竹市": [{ zip: "300", name: "東區" }, { zip: "300", name: "北區" }, { zip: "300", name: "香山區" }],
+            "嘉義市": [{ zip: "600", name: "東區" }, { zip: "600", name: "西區" }],
+            "新竹縣": [{ zip: "302", name: "竹北市" }, { zip: "303", name: "湖口鄉" }, { zip: "304", name: "新豐鄉" }, { zip: "305", name: "新埔鎮" }, { zip: "306", name: "關西鎮" }, { zip: "307", name: "芎林鄉" }, { zip: "308", name: "寶山鄉" }, { zip: "310", name: "竹東鎮" }, { zip: "311", name: "五峰鄉" }, { zip: "312", name: "橫山鄉" }, { zip: "313", name: "尖石鄉" }, { zip: "314", name: "北埔鄉" }, { zip: "315", name: "峨眉鄉" }],
+            "苗栗縣": [{ zip: "350", name: "竹南鎮" }, { zip: "351", name: "頭份市" }, { zip: "352", name: "三灣鄉" }, { zip: "353", name: "南庄鄉" }, { zip: "354", name: "獅潭鄉" }, { zip: "356", name: "後龍鎮" }, { zip: "357", name: "通霄鎮" }, { zip: "358", name: "苑裡鎮" }, { zip: "360", name: "苗栗市" }, { zip: "361", name: "造橋鄉" }, { zip: "362", name: "頭屋鄉" }, { zip: "363", name: "公館鄉" }, { zip: "364", name: "大湖鄉" }, { zip: "365", name: "泰安鄉" }, { zip: "366", name: "銅鑼鄉" }, { zip: "367", name: "三義鄉" }, { zip: "368", name: "西湖鄉" }, { zip: "369", name: "卓蘭鎮" }],
+            "彰化縣": [{ zip: "500", name: "彰化市" }, { zip: "502", name: "芬園鄉" }, { zip: "503", name: "花壇鄉" }, { zip: "504", name: "秀水鄉" }, { zip: "505", name: "鹿港鎮" }, { zip: "506", name: "福興鄉" }, { zip: "507", name: "線西鄉" }, { zip: "508", name: "和美鎮" }, { zip: "509", name: "伸港鄉" }, { zip: "510", name: "員林市" }, { zip: "511", name: "社頭鄉" }, { zip: "512", name: "永靖鄉" }, { zip: "513", name: "埔心鄉" }, { zip: "514", name: "溪湖鎮" }, { zip: "515", name: "大村鄉" }, { zip: "516", name: "埔鹽鄉" }, { zip: "520", name: "田中鎮" }, { zip: "521", name: "北斗鎮" }, { zip: "522", name: "田尾鄉" }, { zip: "523", name: "埤頭鄉" }, { zip: "524", name: "溪州鄉" }, { zip: "525", name: "竹塘鄉" }, { zip: "526", name: "二林鎮" }, { zip: "527", name: "大城鄉" }, { zip: "528", name: "芳苑鄉" }, { zip: "530", name: "二水鄉" }],
+            "南投縣": [{ zip: "540", name: "南投市" }, { zip: "541", name: "中寮鄉" }, { zip: "542", name: "草屯鎮" }, { zip: "544", name: "國姓鄉" }, { zip: "545", name: "埔里鎮" }, { zip: "546", name: "仁愛鄉" }, { zip: "551", name: "名間鄉" }, { zip: "552", name: "集集鎮" }, { zip: "553", name: "水里鄉" }, { zip: "555", name: "魚池鄉" }, { zip: "556", name: "信義鄉" }, { zip: "557", name: "竹山鎮" }, { zip: "558", name: "鹿谷鄉" }],
+            "雲林縣": [{ zip: "630", name: "斗南鎮" }, { zip: "631", name: "大埤鄉" }, { zip: "632", name: "虎尾鎮" }, { zip: "633", name: "土庫鎮" }, { zip: "634", name: "褒忠鄉" }, { zip: "635", name: "東勢鄉" }, { zip: "636", name: "臺西鄉" }, { zip: "637", name: "崙背鄉" }, { zip: "638", name: "麥寮鄉" }, { zip: "640", name: "斗六市" }, { zip: "643", name: "林內鄉" }, { zip: "646", name: "古坑鄉" }, { zip: "647", name: "莿桐鄉" }, { zip: "648", name: "西螺鎮" }, { zip: "649", name: "二崙鄉" }, { zip: "651", name: "北港鎮" }, { zip: "652", name: "水林鄉" }, { zip: "653", name: "口湖鄉" }, { zip: "654", name: "四湖鄉" }, { zip: "655", name: "元長鄉" }],
+            "嘉義縣": [{ zip: "602", name: "番路鄉" }, { zip: "603", name: "梅山鄉" }, { zip: "604", name: "竹崎鄉" }, { zip: "605", name: "阿里山鄉" }, { zip: "606", name: "中埔鄉" }, { zip: "607", name: "大埔鄉" }, { zip: "608", name: "水上鄉" }, { zip: "611", name: "鹿草鄉" }, { zip: "612", name: "太保市" }, { zip: "613", name: "朴子市" }, { zip: "614", name: "東石鄉" }, { zip: "615", name: "六腳鄉" }, { zip: "616", name: "新港鄉" }, { zip: "621", name: "民雄鄉" }, { zip: "622", "name": "大林鎮" }, { zip: "623", name: "溪口鄉" }, { zip: "624", name: "義竹鄉" }, { zip: "625", name: "布袋鎮" }],
+            "屏東縣": [{ zip: "900", name: "屏東市" }, { zip: "901", name: "三地門鄉" }, { zip: "902", name: "霧臺鄉" }, { zip: "903", name: "瑪家鄉" }, { zip: "904", name: "九如鄉" }, { zip: "905", name: "里港鄉" }, { zip: "906", name: "高樹鄉" }, { zip: "907", name: "鹽埔鄉" }, { zip: "908", name: "長治鄉" }, { zip: "909", name: "麟洛鄉" }, { zip: "911", name: "竹田鄉" }, { zip: "912", name: "內埔鄉" }, { zip: "913", name: "萬丹鄉" }, { zip: "920", name: "潮州鎮" }, { zip: "921", name: "泰武鄉" }, { zip: "922", name: "來義鄉" }, { zip: "923", name: "萬巒鄉" }, { zip: "924", name: "崁頂鄉" }, { zip: "925", name: "新埤鄉" }, { zip: "926", name: "南州鄉" }, { zip: "927", name: "林邊鄉" }, { zip: "928", name: "東港鎮" }, { zip: "929", name: "琉球鄉" }, { zip: "931", name: "佳冬鄉" }, { zip: "932", name: "新園鄉" }, { zip: "940", name: "枋寮鄉" }, { zip: "941", name: "枋山鄉" }, { zip: "942", name: "春日鄉" }, { zip: "943", name: "獅子鄉" }, { zip: "944", name: "車城鄉" }, { zip: "945", name: "牡丹鄉" }, { zip: "946", name: "恆春鎮" }, { zip: "947", name: "滿州鄉" }],
+            "宜蘭縣": [{ zip: "260", name: "宜蘭市" }, { zip: "261", name: "頭城鎮" }, { zip: "262", name: "礁溪鄉" }, { zip: "263", name: "壯圍鄉" }, { zip: "264", name: "員山鄉" }, { zip: "265", name: "羅東鎮" }, { zip: "266", name: "三星鄉" }, { zip: "267", name: "大同鄉" }, { zip: "268", name: "五結鄉" }, { zip: "269", name: "冬山鄉" }, { zip: "270", name: "蘇澳鎮" }, { zip: "272", name: "南澳鄉" }],
+            "花蓮縣": [{ zip: "970", name: "花蓮市" }, { zip: "971", name: "新城鄉" }, { zip: "972", name: "秀林鄉" }, { zip: "973", name: "吉安鄉" }, { zip: "974", name: "壽豐鄉" }, { zip: "975", name: "鳳林鎮" }, { zip: "976", name: "光復鄉" }, { zip: "977", name: "豐濱鄉" }, { zip: "978", name: "瑞穗鄉" }, { zip: "979", name: "萬榮鄉" }, { zip: "981", name: "玉里鎮" }, { zip: "982", name: "卓溪鄉" }, { zip: "983", name: "富里鄉" }],
+            "臺東縣": [{ zip: "950", name: "臺東市" }, { zip: "951", name: "綠島鄉" }, { zip: "952", name: "蘭嶼鄉" }, { zip: "953", name: "延平鄉" }, { zip: "954", name: "卑南鄉" }, { zip: "955", name: "鹿野鄉" }, { zip: "956", name: "關山鎮" }, { zip: "957", name: "海端鄉" }, { zip: "958", name: "池上鄉" }, { zip: "959", name: "東河鄉" }, { zip: "961", name: "成功鎮" }, { zip: "962", name: "長濱鄉" }, { zip: "963", name: "太麻里鄉" }, { zip: "964", name: "金峰鄉" }, { zip: "965", name: "大武鄉" }, { zip: "966", name: "達仁鄉" }],
+            "澎湖縣": [{ zip: "880", name: "馬公市" }, { zip: "881", name: "西嶼鄉" }, { zip: "882", name: "望安鄉" }, { zip: "883", name: "七美鄉" }, { zip: "884", name: "白沙鄉" }, { zip: "885", name: "湖西鄉" }],
+            "金門縣": [{ zip: "890", name: "金沙鎮" }, { zip: "891", name: "金湖鎮" }, { zip: "892", name: "金寧鄉" }, { zip: "893", name: "金城鎮" }, { zip: "894", name: "烈嶼鄉" }, { zip: "896", name: "烏坵鄉" }],
+            "連江縣": [{ zip: "209", name: "南竿鄉" }, { zip: "210", name: "北竿鄉" }, { zip: "211", name: "莒光鄉" }, { zip: "212", name: "東引鄉" }]
+        };
+
+        const demoSwitcher = document.getElementById('demoClaimTypeSwitcher');
+        const beneficiaryListArea = document.getElementById('beneficiary-list-area');
+        const beneficiaryMaintenanceArea = document.getElementById('beneficiary-maintenance-area');
+        const beneficiaryMaintenanceButtons = document.getElementById('beneficiary-maintenance-buttons');
+        const beneficiaryTableBody = document.getElementById('beneficiary-table-body');
+        const heirDataArea = document.getElementById('heir-data-area');
+        const heirCountInput = document.getElementById('heir-count');
+        const heirDetailsContainer = document.getElementById('heir-details-container');
+        const heirDetailTemplate = document.getElementById('heir-detail-template');
+        const heirListArea = document.getElementById('heir-list-area');
+        const heirTableBody = document.getElementById('heir-table-body');
+        const amountSplitModalEl = document.getElementById('amountSplitModal');
+        const amountSplitModal = new bootstrap.Modal(amountSplitModalEl);
+        
+        let state = {};
+        let isFormDirty = false;
+        let editingRowElement = null;
+
+        function setFormDirty(dirty) {
+            isFormDirty = dirty;
+            try { sessionStorage.setItem('op6_edit_dirty_any', dirty ? 'true' : 'false'); } catch(e) {}
+            // 當表單內容有異動時，禁用審核清單列印按鈕，並清除已啟用之狀態
+            if (dirty) {
+                document.getElementById('btn-print-checklist').disabled = true;
+                sessionStorage.removeItem(checklistEnabledKey);
+            }
+            updatePrintChecklistAvailability();
+        }
+        
+        function confirmDelete(button) {
+            if (confirm('是否進行刪除？')) {
+                const row = button.closest('.beneficiary-row');
+                row.remove();
+                
+                const allRows = beneficiaryTableBody.querySelectorAll('.beneficiary-row');
+                allRows.forEach((r, index) => {
+                    const cells = r.querySelectorAll('.cell');
+                    if (cells[0]) cells[0].textContent = index + 1;
+                });
+
+                alert('刪除成功！');
+                const beneficiaryCount = allRows.length;
+                document.getElementById('display-applicant-count').textContent = beneficiaryCount;
+                
+                document.getElementById('btn-confirm').click();
+            }
+        }
+        
+        function validateDesignatedAccount() {
+            if (beneficiaryListArea.style.display === 'none') {
+                return true;
+            }
+            const checkedBoxes = document.querySelectorAll('#beneficiary-table-body .form-check-input:checked');
+            if (checkedBoxes.length > 1) {
+                alert('指定匯入帳號只能勾選一筆，請重新確認。');
+                return false;
+            }
+            return true;
+        }
+
+        function handleEnterAsTab(container) {
+            container.addEventListener('keydown', (event) => {
+                if (event.isComposing) {
+                    return;
+                }
+
+                if (event.key === 'Enter') {
+                    const target = event.target;
+                    if (target.matches('input, select')) {
+                        event.preventDefault();
+                        const focusableElements = Array.from(
+                            container.querySelectorAll('input:not([type="hidden"]):not(:disabled), select:not(:disabled)')
+                        );
+                        const visibleFocusableElements = focusableElements.filter(el => {
+                            const style = window.getComputedStyle(el);
+                            return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetWidth > 0 && el.offsetHeight > 0;
+                        });
+                        
+                        const currentIndex = visibleFocusableElements.indexOf(target);
+                        const nextIndex = currentIndex + 1;
+
+                        if (nextIndex < visibleFocusableElements.length) {
+                            visibleFocusableElements[nextIndex].focus();
+                        }
+                    }
+                }
+            });
+        }
+
+        for (const key in claimTypeMap) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = claimTypeMap[key];
+            demoSwitcher.appendChild(option);
+        }
+
+        function createNewState(claimType, caseId) {
+            let newState = { demoClaimType: claimType, caseId: caseId || 'A01-1-24-123456-', version: '1', laborerName: '王大明', laborerId: 'A123456789', laborerDob: '0600101', laborerDod: '', civilLawInheritance: false, };
+            if (['51', '52', '53'].includes(claimType)) {
+                newState.laborerDod = '1130610';
+                newState.civilLawInheritance = true;
+            }
+            // 依規則：若 DOD 有值且為 31/41/43 亦可顯示繼承案件（Demo預設給值以便查看）
+            if (['31','41','43'].includes(claimType)) {
+                newState.laborerDod = '1130610';
+            }
+            return newState;
+        }
+        
+        function mergeDefaultsForClaim(st) {
+            const ct = (st && st.demoClaimType) || urlParams.get('claimType') || '51';
+            const base = createNewState(ct, (st && st.caseId) || caseIdFromUrl);
+            const merged = { ...base, ...(st || {}) };
+            Object.keys(base).forEach(k => {
+                const v = merged[k];
+                if (v === undefined || v === null || v === '') merged[k] = base[k];
+            });
+            return merged;
+        }
+        
+        function loadState() {
+            let savedStateJSON = sessionStorage.getItem(storageKey);
+            if (!savedStateJSON) {
+                // 再嘗試以 URL caseId 的 key 或 demo key
+                const alt1 = `op6_edit_state_${caseIdFromUrl || ''}`;
+                savedStateJSON = alt1 ? sessionStorage.getItem(alt1) : null;
+                if (!savedStateJSON) {
+                    const alt2 = 'op6_edit_state_demo_case_01';
+                    savedStateJSON = sessionStorage.getItem(alt2);
+                }
+            }
+            if (savedStateJSON) {
+                let loaded = JSON.parse(savedStateJSON);
+                // 以 URL 參數為準，覆蓋舊的暫存類別/受理編號，再補齊缺漏欄位
+                const claimTypeFromUrl = urlParams.get('claimType');
+                if (claimTypeFromUrl && loaded.demoClaimType !== claimTypeFromUrl) {
+                    loaded.demoClaimType = claimTypeFromUrl;
+                }
+                if (caseIdFromUrl) { loaded.caseId = caseIdFromUrl; }
+                state = mergeDefaultsForClaim(loaded);
+            } else {
+                const claimTypeFromUrl = urlParams.get('claimType');
+                const initialClaimType = claimTypeFromUrl || '51'; 
+                state = createNewState(initialClaimType, caseIdFromUrl);
+            }
+            // 讀取審核清單按鈕的啟用狀態
+            if (sessionStorage.getItem(checklistEnabledKey) === 'true') {
+                document.getElementById('btn-print-checklist').disabled = false;
+            } else {
+                document.getElementById('btn-print-checklist').disabled = true;
+            }
+            // 確保 state.caseId 不因分頁缺少參數而遺失
+            if (!state.caseId && caseIdFromUrl) { state.caseId = caseIdFromUrl; }
+            try { sessionStorage.setItem('op6_current_case_id', state.caseId || caseIdFromUrl || 'demo_case_01'); } catch(e) {}
+            // 同步別名 key，避免跨頁讀不到
+            try {
+                const aliasKey = `op6_edit_state_${state.caseId || caseIdFromUrl || 'demo_case_01'}`;
+                if (aliasKey !== storageKey) {
+                    sessionStorage.setItem(aliasKey, JSON.stringify(state));
+                }
+            } catch(e) {}
+        }
+
+        function saveState() { 
+             if(state) {
+                sessionStorage.setItem(storageKey, JSON.stringify(state)); 
+                try {
+                    const aliasKey = `op6_edit_state_${state.caseId || caseIdFromUrl || 'demo_case_01'}`;
+                    if (aliasKey !== storageKey) {
+                        sessionStorage.setItem(aliasKey, JSON.stringify(state));
+                    }
+                } catch(e) {}
+             }
+        }
+
+        function showView(view, isSingleCase = false) {
+            beneficiaryListArea.style.display = 'none';
+            beneficiaryMaintenanceArea.style.display = 'none';
+            
+            if (view === 'list') {
+                beneficiaryListArea.style.display = '';
+            } else if (view === 'maintenance') {
+                beneficiaryMaintenanceArea.style.display = '';
+                beneficiaryMaintenanceButtons.style.display = isSingleCase ? 'none' : '';
+            }
+        }
+        
+        function showHeirView(view) {
+             heirListArea.style.display = 'none';
+             heirDetailsContainer.style.display = 'none';
+             if (view === 'list') {
+                 heirListArea.style.display = '';
+             } else if (view === 'detail') {
+                 heirDetailsContainer.style.display = '';
+             }
+        }
+
+        function populateCountryDropdown(selectElement) {
+            if (!selectElement) return;
+            selectElement.innerHTML = '<option value="">-- 請選擇 --</option>';
+            for (const code in countryData) {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = `${code} - ${countryData[code]}`;
+                selectElement.appendChild(option);
+            }
+        }
+        
+        // --- 新增：專門渲染繼承人列表的函式 ---
+        function renderHeirList(beneficiaryId) {
+            heirTableBody.innerHTML = ''; // 清空現有列表
+            const beneficiaryData = mockBeneficiaryDetails[beneficiaryId];
+            
+            if (beneficiaryData && beneficiaryData.heirs) {
+                beneficiaryData.heirs.forEach(heir => {
+                    const newRow = document.createElement('div');
+                    newRow.className = 'heir-list-row heir-row';
+                    newRow.innerHTML = `
+                        <div class="cell">${heir.seq}</div>
+                        <div class="cell">${heir.relation}</div>
+                        <div class="cell">${heir.name}</div>
+                        <div class="cell">${heir.id}</div>
+                        <div class="cell op-col-actions">
+                            <button class="btn btn-sm btn-outline-primary me-1 btn-modify-heir" title="修改"><i class="bi bi-pencil-square"></i> 修改</button>
+                            <button class="btn btn-sm btn-outline-danger btn-delete-heir" title="刪除"><i class="bi bi-trash"></i> 刪除</button>
+                        </div>
+                    `;
+                    heirTableBody.appendChild(newRow);
+                });
+                heirCountInput.value = beneficiaryData.heirs.length;
+            } else {
+                heirCountInput.value = 0;
+            }
+        }
+
+        function generateSingleHeirForm(data = {}) {
+            heirDetailsContainer.innerHTML = ''; 
+            const clone = heirDetailTemplate.content.cloneNode(true);
+
+            const seq = data.seq || '新增';
+            clone.querySelector('.heir-seq').textContent = seq;
+            clone.querySelector('.heir-name').value = data.name || '';
+            clone.querySelector('.heir-id').value = data.id || '';
+            
+            const relationSelect = clone.querySelector('.heir-relation');
+            if (data.relation) {
+                const relationMap = {'子女': '4', '配偶': '2'};
+                const relationValue = Object.keys(relationMap).find(key => relationMap[key] === data.relation) || data.relation;
+                relationSelect.value = relationValue;
+            }
+
+            // --- 填充繼承人 Demo 詳細資料 ---
+            if (data.id && mockHeirDetails[data.id]) {
+                const mockData = mockHeirDetails[data.id];
+                clone.querySelector('#heir-dob').value = mockData.dob;
+                clone.querySelector('#heir-phone').value = mockData.phone;
+                clone.querySelector('#heir-mobile').value = mockData.mobile;
+                clone.querySelector('#heir-payout-method').value = mockData.payoutMethod;
+                clone.querySelector('#heir-address-type').value = mockData.addressType;
+                
+                if (mockData.addressType === '現住址') {
+                    const citySelect = clone.querySelector('#heir-city');
+                    const districtSelect = clone.querySelector('#heir-district');
+                    clone.querySelector('#heir-zip').value = mockData.zip;
+                    citySelect.value = mockData.city;
+                    setTimeout(() => { // 確保縣市選項已載入
+                        citySelect.dispatchEvent(new Event('change'));
+                        setTimeout(() => { // 確保鄉鎮市區選項已載入
+                            districtSelect.value = mockData.district;
+                            districtSelect.dispatchEvent(new Event('change'));
+                        }, 0);
+                    }, 0);
+                    clone.querySelector('#heir-street').value = mockData.street;
+                }
+                
+                if (['1', '2', '7', '8'].includes(mockData.payoutMethod)) {
+                    clone.querySelector('#heir-account-branch').value = mockData.account[0];
+                    clone.querySelector('#heir-account-bank').value = mockData.account[1];
+                    clone.querySelector('#heir-account-number').value = mockData.account[2];
+                    clone.querySelector('#heir-account-branch-2').value = mockData.account[0];
+                    clone.querySelector('#heir-account-bank-2').value = mockData.account[1];
+                    clone.querySelector('#heir-account-number-2').value = mockData.account[2];
+                }
+            } else if (!data.id) { // 如果是新增，嘗試載入暫存資料
+                 const tempData = JSON.parse(sessionStorage.getItem(tempNewHeirKey) || '{}');
+                 Object.keys(tempData).forEach(key => {
+                    const input = clone.querySelector(`#${key}`);
+                    if (input) input.value = tempData[key];
+                 });
+            }
+            
+            if (String(seq) === '1') {
+                const sameAsPrevCheckboxContainer = clone.querySelector('.heir-addr-same-as-prev').closest('.form-check');
+                if (sameAsPrevCheckboxContainer) {
+                    sameAsPrevCheckboxContainer.style.display = 'none';
+                }
+            }
+
+            const checkbox = clone.querySelector('.heir-addr-same-as-prev');
+            const uniqueId = `addr-same-as-prev-${new Date().getTime()}`;
+            checkbox.id = uniqueId;
+            checkbox.nextElementSibling.setAttribute('for', uniqueId);
+            
+            heirDetailsContainer.appendChild(clone);
+            setupDynamicAddress(heirDetailsContainer, { city: '.heir-city', district: '.heir-district', zip: '.heir-zip' }, taiwanDistrictsAndZips);
+            populateCountryDropdown(heirDetailsContainer.querySelector('.heir-foreign-addr-country'));
+
+            // 觸發 change 事件以顯示正確的欄位
+            setTimeout(() => {
+                const loadedPayoutMethod = heirDetailsContainer.querySelector('#heir-payout-method');
+                if (loadedPayoutMethod) loadedPayoutMethod.dispatchEvent(new Event('change'));
+                
+                const loadedAddressType = heirDetailsContainer.querySelector('#heir-address-type');
+                 if (loadedAddressType) loadedAddressType.dispatchEvent(new Event('change'));
+            }, 100);
+
+            showHeirView('detail');
+        }
+
+        function resetHeirDataArea() {
+            const heirArea = document.getElementById('heir-data-area');
+            const heirCountInput = document.getElementById('heir-count');
+            
+            heirArea.querySelector('input[type="text"]').value = ''; 
+            heirArea.querySelector('select').selectedIndex = 0; 
+            heirCountInput.value = '';
+
+            document.getElementById('heir-table-body').innerHTML = '';
+            document.getElementById('heir-details-container').innerHTML = '';
+            
+            updateHeirSectionVisibility();
+        }
+
+        function updateHeirSectionVisibility() {
+            const count = parseInt(heirCountInput.value, 10) || 0;
+            if (count > 1) {
+                showHeirView('list');
+            } else if (count === 1) {
+                generateSingleHeirForm({ seq: 1 });
+            } else {
+                heirListArea.style.display = 'none';
+                heirDetailsContainer.style.display = 'none';
+            }
+        }
+
+        function formatCaseId(val) {
+            const s = (val || '').toString();
+            if (!s) return '';
+            const parts = s.split('-');
+            for (let i = parts.length - 1; i >= 0; i--) {
+                if (parts[i] === '' || parts[i] === undefined || parts[i] === null) { parts.pop(); } else { break; }
+            }
+            return parts.join('-');
+        }
+
+        function updateUIFromLoadedState() {
+            if (!state) return;
+            const currentClaimType = state.demoClaimType;
+            demoSwitcher.value = currentClaimType;
+            document.getElementById('display-claim-type').textContent = claimTypeMap[currentClaimType] || '未知';
+            
+            const displayCaseId = formatCaseId(state.caseId || '');
+            document.getElementById('display-case-id').textContent = displayCaseId;
+            document.getElementById('display-version').textContent = state.version || '1';
+            document.getElementById('display-laborer-name').textContent = state.laborerName || '';
+            document.getElementById('display-laborer-id').textContent = state.laborerId || '';
+            document.getElementById('display-laborer-dob').textContent = state.laborerDob || '';
+            const dodVal = state.laborerDod || '';
+            const dodEl = document.getElementById('display-laborer-dod');
+            const inhEl = document.getElementById('display-civil-law-inheritance');
+            if (dodEl) dodEl.textContent = dodVal;
+            if (inhEl) inhEl.textContent = state.civilLawInheritance ? '是' : '否';
+            // 依你的MD：若 DOD 無值，受款人頁首不顯示 DOD 與繼承案件
+            try {
+                const dodItem = dodEl?.closest('.flex-form-item');
+                const inhItem = inhEl?.closest('.flex-form-item');
+                const show = !!dodVal;
+                if (dodItem) dodItem.style.display = show ? '' : 'none';
+                if (inhItem) inhItem.style.display = show ? '' : 'none';
+            } catch(e) {}
+
+            const isDeathClaim = ['51', '52', '53'].includes(currentClaimType);
+            
+            if(isDeathClaim) {
+                 const beneficiaryRowCount = document.getElementById('beneficiary-table-body').querySelectorAll('tr').length;
+                 const isSingleBeneficiary = beneficiaryRowCount === 1;
+                 showView(isSingleBeneficiary ? 'maintenance' : 'list', isSingleBeneficiary);
+
+                 document.querySelector("#ben-name").disabled = false; document.querySelector("#ben-id").disabled = false; document.querySelector("#ben-dob").disabled = false; document.querySelector("#ben-relation").disabled = false;
+            } else {
+                 showView('maintenance', true); 
+                 document.querySelector("#ben-name").disabled = true; document.querySelector("#ben-id").disabled = true; document.querySelector("#ben-dob").disabled = true; document.querySelector("#ben-relation").disabled = true;
+                 document.querySelector("#ben-name").value = state.laborerName; document.querySelector("#ben-id").value = state.laborerId; document.querySelector("#ben-dob").value = state.laborerDob; document.querySelector("#ben-relation").value = '1';
+            }
+
+            heirDataArea.style.display = state.civilLawInheritance ? '' : 'none';
+            if(state.civilLawInheritance) {
+                updateHeirSectionVisibility();
+            }
+
+            updateFieldVisibility(currentClaimType);
+            const activeTabId = document.querySelector('#myTab .nav-link.active')?.id || 'tab-basic';
+            updateButtonsForTab(activeTabId, currentClaimType);
+        }
+
+        function updateFieldVisibility(currentClaimType) {
+            document.querySelectorAll('[data-claim-type-show]').forEach(item => {
+                const visibleTypes = item.getAttribute('data-claim-type-show').split(',');
+                item.style.display = visibleTypes.includes(currentClaimType) ? '' : 'none';
+            });
+        }
+        
+        function updateButtonsForTab(activeTabId, currentClaimType) {
+            const isEditableTab = ['tab-basic', 'tab-beneficiary', 'tab-case-notes'].includes(activeTabId);
+            document.getElementById('btn-confirm').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-print-checklist').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-prepare-approval').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-cancel-case').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-print-pdf').style.display = isEditableTab ? 'none' : '';
+            const isBeneficiaryTab = activeTabId === 'tab-beneficiary';
+            const isDeathClaimType = ['51', '52', '53'].includes(currentClaimType);
+            document.getElementById('btn-split-amount').style.display = (isBeneficiaryTab && isDeathClaimType) ? '' : 'none';
+        }
+
+        function updateTabLinks() {
+            const currentCaseId = state.caseId || caseIdFromUrl || '';
+            const currentClaimType = state.demoClaimType || urlParams.get('claimType') || '';
+            document.querySelectorAll('#myTab .nav-link').forEach(tabLink => {
+                const baseHref = tabLink.getAttribute('href').split('?')[0];
+                if (baseHref === '#' || !baseHref) return;
+                
+                const params = new URLSearchParams();
+                if (currentClaimType) params.set('claimType', currentClaimType);
+                if (currentCaseId) params.set('caseId', currentCaseId);
+                const newHref = params.toString() ? `${baseHref}?${params.toString()}` : baseHref;
+                tabLink.setAttribute('href', newHref);
+            });
+        }
+
+        function isGlobalDirty() {
+            try { return sessionStorage.getItem('op6_edit_dirty_any') === 'true'; } catch(e) { return false; }
+        }
+
+        function updatePrintChecklistAvailability() {
+            const btn = document.getElementById('btn-print-checklist');
+            if (!btn) return;
+            const hasErrors = !!document.querySelector('#pane-beneficiary .validation-error, #pane-beneficiary .error-message');
+            const enabled = !!(state && state.isReAdjudicated && !isFormDirty && !isGlobalDirty() && !hasErrors);
+            btn.disabled = !enabled;
+        }
+        
+        function recalculateAmounts() {
+            const totalAmountText = document.getElementById('display-approved-amount').textContent;
+            if (!totalAmountText) return;
+
+            const totalAmount = parseFloat(totalAmountText.replace(/,/g, '')) || 0;
+            const rows = document.querySelectorAll('#beneficiary-table-body .beneficiary-row');
+            const checkedBox = document.querySelector('#beneficiary-table-body .form-check-input:checked');
+
+            if (checkedBox) {
+                const checkedRow = checkedBox.closest('.beneficiary-row');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('.cell');
+                    const distributableCell = cells[5];
+                    const actualPayoutCell = cells[7];
+                    if (row === checkedRow) {
+                        distributableCell.textContent = totalAmount.toLocaleString('en-US');
+                        actualPayoutCell.textContent = totalAmount.toLocaleString('en-US');
+                    } else {
+                        distributableCell.textContent = '0';
+                        actualPayoutCell.textContent = '0';
+                    }
+                });
+            } else {
+                const beneficiaryCount = rows.length;
+                if (beneficiaryCount > 0) {
+                    const equalShare = Math.floor(totalAmount / beneficiaryCount);
+                    let distributedAmount = 0;
+                    rows.forEach((row, index) => {
+                        const cells = row.querySelectorAll('.cell');
+                        const distributableCell = cells[5];
+                        const actualPayoutCell = cells[7];
+                        if (index < beneficiaryCount - 1) {
+                            distributableCell.textContent = equalShare.toLocaleString('en-US');
+                            actualPayoutCell.textContent = equalShare.toLocaleString('en-US');
+                            distributedAmount += equalShare;
+                        } else { 
+                            const lastShare = totalAmount - distributedAmount;
+                            distributableCell.textContent = lastShare.toLocaleString('en-US');
+                            actualPayoutCell.textContent = lastShare.toLocaleString('en-US');
+                        }
+                });
+            }
+            // 更新跨頁繼承人數旗標
+            try {
+                const key = `op6_heir_count_${state.caseId || caseIdFromUrl || ''}`;
+                const cnt = heirTableBody.querySelectorAll('.heir-row').length;
+                sessionStorage.setItem(key, String(cnt));
+            } catch(e) {}
+        }
+        }
+        
+        function clearError(element) {
+            const container = element.closest('.field-content');
+            if (container) {
+                const errorDiv = container.querySelector('.validation-error');
+                if (errorDiv) {
+                    errorDiv.remove();
+                }
+            }
+        }
+
+        function clearAllErrors(form) {
+            form.querySelectorAll('.validation-error').forEach(e => e.remove());
+        }
+
+        function showError(element, message) {
+            clearError(element);
+            const container = element.closest('.field-content');
+             if (container) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'validation-error';
+                errorDiv.textContent = message;
+                container.appendChild(errorDiv);
+            }
+            return element;
+        }
+
+        // 通用：依「可見星號」判斷必填（container 內的 label .required）
+        function validateRequiredByStar(container) {
+            let firstError = null;
+            const labels = container.querySelectorAll('label.col-form-label .required');
+            labels.forEach(star => {
+                const label = star.closest('label');
+                if (!label || label.offsetParent === null) return; // 不可見不檢核
+                const fieldContainer = label.closest('.form-field-container');
+                const field = fieldContainer ? fieldContainer.querySelector('.field-content input, .field-content select, .field-content textarea') : null;
+                if (!field || field.disabled || field.offsetParent === null) return;
+                const val = (field.type === 'checkbox' || field.type === 'radio') ? (field.checked ? 'Y' : '') : (field.value || '').trim();
+                if (!val) {
+                    firstError = firstError || showError(field, '此為必要欄位，請勿空白。');
+                }
+            });
+            return firstError;
+        }
+
+
+        function clearBeneficiaryForm() {
+            const form = document.getElementById('beneficiary-maintenance-area');
+            form.querySelectorAll('input[type="text"], input[type="tel"]').forEach(input => input.value = '');
+            form.querySelectorAll('select').forEach(select => {
+                select.selectedIndex = 0;
+                if (select.id === 'ben-relation' || select.id === 'ben-payout-method') {
+                    select.value = '';
+                }
+            });
+            clearAllErrors(form);
+            resetHeirDataArea(); 
+            form.querySelector('#ben-payout-method').dispatchEvent(new Event('change'));
+            form.querySelector('#ben-address-type').dispatchEvent(new Event('change'));
+            sessionStorage.removeItem(tempNewBenKey); // 清除暫存
+        }
+
+        function populateBeneficiaryForm(row) {
+            clearBeneficiaryForm(); 
+            const form = document.getElementById('beneficiary-maintenance-area');
+
+            const cells = row.querySelectorAll('.cell');
+            const seq = cells[0].textContent;
+            const relationText = cells[2].textContent;
+            const name = cells[3].textContent;
+            const id = cells[4].textContent;
+
+            const relationMap = { '本人': '1', '配偶': '2', '父母': '3', '子女': '4', '祖父母': '5', '兄弟姊妹': '6', '孫子女': '7', '遺囑指定請領人': '8', '其他':'9', '遺囑指定監護人':'A', '法院選定監護人':'B', '受委託代領人':'E', '法院扣押':'Z' };
+            const relationValue = relationMap[relationText] || '';
+
+            form.querySelector('#ben-seq').textContent = seq;
+            form.querySelector('#ben-name').value = name;
+            form.querySelector('#ben-id').value = id;
+            form.querySelector('#ben-relation').value = relationValue;
+
+            // --- 填充受款人 Demo 詳細資料 ---
+            const mockData = mockBeneficiaryDetails[id];
+            if (mockData) {
+                form.querySelector('#ben-dob').value = mockData.dob;
+                form.querySelector('#ben-phone').value = mockData.phone;
+                form.querySelector('#ben-mobile').value = mockData.mobile;
+                form.querySelector('#ben-payout-method').value = mockData.payoutMethod;
+                form.querySelector('#ben-address-type').value = mockData.addressType;
+
+                if (mockData.addressType === '現住址') {
+                    const citySelect = form.querySelector('#ben-address-city');
+                    const districtSelect = form.querySelector('#ben-address-district');
+                    form.querySelector('#ben-zip').value = mockData.zip;
+                    citySelect.value = mockData.city;
+                    citySelect.dispatchEvent(new Event('change'));
+                    setTimeout(() => { // 等待行政區選項載入
+                        districtSelect.value = mockData.district;
+                        districtSelect.dispatchEvent(new Event('change'));
+                    }, 0);
+                    form.querySelector('#ben-address-street').value = mockData.street;
+                }
+
+                if (['1', '2', '7', '8'].includes(mockData.payoutMethod)) {
+                    form.querySelector('#ben-account-branch').value = mockData.account[0];
+                    form.querySelector('#ben-account-bank').value = mockData.account[1];
+                    form.querySelector('#ben-account-number').value = mockData.account[2];
+                    form.querySelector('#ben-account-branch-2').value = mockData.account[0];
+                    form.querySelector('#ben-account-bank-2').value = mockData.account[1];
+                    form.querySelector('#ben-account-number-2').value = mockData.account[2];
+                }
+                form.querySelector('#ben-payout-method').dispatchEvent(new Event('change'));
+                form.querySelector('#ben-address-type').dispatchEvent(new Event('change'));
+            }
+             // 動態渲染繼承人列表
+            renderHeirList(id);
+        }
+        
+        function validateBeneficiaryForm() {
+            const form = document.getElementById('beneficiary-maintenance-area');
+            clearAllErrors(form);
+            let firstErrorElement = null;
+
+            // 先做「可見星號＝必填」的通用檢核
+            firstErrorElement = validateRequiredByStar(form) || firstErrorElement;
+
+            const nameEl = document.getElementById('ben-name');
+            if (nameEl.value.trim() === '') {
+                firstErrorElement = firstErrorElement || showError(nameEl, '請輸入「請領人姓名」。');
+            }
+
+            const idEl = document.getElementById('ben-id');
+            const idVal = idEl.value.trim().toUpperCase();
+            if (idVal === '') {
+                 firstErrorElement = firstErrorElement || showError(idEl, '請輸入「身分證字號」。');
+            } else if (!/^[A-Z][0-9]{9}$/.test(idVal)) { 
+                 firstErrorElement = firstErrorElement || showError(idEl, '身分證字號格式錯誤（英文字母1碼+數字9碼）。');
+            }
+
+            const dobEl = document.getElementById('ben-dob');
+            const parseRocDate = (yyyMMdd) => {
+                const s = (yyyMMdd || '').trim();
+                if (!/^\d{7}$/.test(s)) return null;
+                const y = 1911 + parseInt(s.slice(0, 3), 10);
+                const m = parseInt(s.slice(3, 5), 10);
+                const d = parseInt(s.slice(5, 7), 10);
+                if (m < 1 || m > 12) return null;
+                const dt = new Date(y, m - 1, d);
+                if (dt.getFullYear() !== y || (dt.getMonth() + 1) !== m || dt.getDate() !== d) return null;
+                return dt;
+            };
+            const today = new Date();
+            const benDob = dobEl.value.trim();
+            if (benDob === '') {
+                firstErrorElement = firstErrorElement || showError(dobEl, '請輸入「出生日期」。');
+            } else {
+                const dt = parseRocDate(benDob);
+                if (!dt) {
+                    firstErrorElement = firstErrorElement || showError(dobEl, '「出生日期」格式應為7碼，且需為有效日期 (例如: 0650101)。');
+                } else if (dt.getTime() > today.getTime()) {
+                    firstErrorElement = firstErrorElement || showError(dobEl, '「出生日期」不得晚於系統日。');
+                }
+            }
+
+            const relationEl = document.getElementById('ben-relation');
+            if (relationEl.value === '') {
+                firstErrorElement = firstErrorElement || showError(relationEl, '請選擇「關係」。');
+            }
+            
+            const addressType = document.getElementById('ben-address-type').value;
+            if (addressType === '現住址') { 
+                const addressGroup = document.getElementById('ben-address-group');
+                const addressFields = addressGroup.querySelectorAll('input, select');
+                let allAddressPartsFilled = true;
+                addressFields.forEach(field => {
+                    if (field.value.trim() === '' && !field.disabled) {
+                        allAddressPartsFilled = false;
+                    }
+                });
+
+                if (!allAddressPartsFilled) {
+                    firstErrorElement = firstErrorElement || showError(addressFields[0], '請輸入完整的郵遞區號與地址。');
+                }
+            }
+
+            const payoutMethodEl = document.getElementById('ben-payout-method');
+            if (payoutMethodEl.value === '') {
+                firstErrorElement = firstErrorElement || showError(payoutMethodEl, '請選擇「核發方式」。');
+            }
+
+            if (['1', '2', '7', '8'].includes(payoutMethodEl.value)) {
+                const acc1_branch = document.getElementById('ben-account-branch').value;
+                const acc1_bank = document.getElementById('ben-account-bank').value;
+                const acc1_num = document.getElementById('ben-account-number').value;
+                
+                const acc2_branch_el = document.getElementById('ben-account-branch-2');
+                const acc2_bank = document.getElementById('ben-account-bank-2').value;
+                const acc2_num = document.getElementById('ben-account-number-2').value;
+
+                if (acc1_branch !== acc2_branch_el.value || acc1_bank !== acc2_bank || acc1_num !== acc2_num) {
+                     firstErrorElement = firstErrorElement || showError(acc2_branch_el, '帳號(複驗)與帳號不符，請重新確認。');
+                }
+            }
+
+            if (firstErrorElement) {
+                firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function validateHeirForm(formBlock) {
+            clearAllErrors(formBlock);
+            let firstErrorElement = null;
+
+            // 先做「可見星號＝必填」的通用檢核（僅限這個繼承人區塊）
+            firstErrorElement = validateRequiredByStar(formBlock) || firstErrorElement;
+
+            const nameEl = formBlock.querySelector('.heir-name');
+            if (nameEl.value.trim() === '') {
+                firstErrorElement = firstErrorElement || showError(nameEl, '請輸入「申請人姓名」。');
+            }
+
+            const idEl = formBlock.querySelector('.heir-id');
+            const idVal = idEl.value.trim().toUpperCase();
+            if (idVal === '') {
+                 firstErrorElement = firstErrorElement || showError(idEl, '請輸入「身分證字號」。');
+            } else if (!/^[A-Z][0-9]{9}$/.test(idVal)) { 
+                 firstErrorElement = firstErrorElement || showError(idEl, '身分證字號格式錯誤（英文字母1碼+數字9碼）。');
+            }
+
+            const addressTypeEl = formBlock.querySelector('.heir-address-type');
+            if (addressTypeEl && addressTypeEl.value === '現住址') {
+                const addressGroup = formBlock.querySelector('.heir-address-group');
+                const addressFields = addressGroup.querySelectorAll('input, select');
+                let allAddressPartsFilled = true;
+                addressFields.forEach(field => {
+                    if (!field.disabled && field.value.trim() === '') {
+                        allAddressPartsFilled = false;
+                    }
+                });
+
+                if (!allAddressPartsFilled) {
+                    firstErrorElement = firstErrorElement || showError(addressFields[0], '請輸入完整的郵遞區號與地址。');
+                }
+            }
+            
+            const payoutMethodEl = formBlock.querySelector('.heir-payout-method');
+            if (payoutMethodEl && payoutMethodEl.value === '') {
+                firstErrorElement = firstErrorElement || showError(payoutMethodEl, '請選擇「核發方式」。');
+            }
+
+            if (payoutMethodEl && ['1', '2', '7', '8'].includes(payoutMethodEl.value)) {
+                const acc1_branch = formBlock.querySelector('#heir-account-branch').value;
+                const acc1_bank = formBlock.querySelector('#heir-account-bank').value;
+                const acc1_num = formBlock.querySelector('#heir-account-number').value;
+
+                const acc2_branch_el = formBlock.querySelector('#heir-account-branch-2');
+                const acc2_bank = formBlock.querySelector('#heir-account-bank-2').value;
+                const acc2_num = formBlock.querySelector('#heir-account-number-2').value;
+
+                if (acc1_branch !== acc2_branch_el.value || acc1_bank !== acc2_bank || acc1_num !== acc2_num) {
+                    firstErrorElement = firstErrorElement || showError(acc2_branch_el, '帳號(複驗)與帳號不符，請重新確認。');
+                }
+            }
+
+            if (firstErrorElement) {
+                firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            return true;
+        }
+
+        function setupDynamicAddress(container, selectors, data) {
+            const citySelect = container.querySelector(selectors.city);
+            const districtSelect = container.querySelector(selectors.district);
+            const zipInput = container.querySelector(selectors.zip);
+
+            if(!citySelect || !districtSelect || !zipInput) return;
+
+            citySelect.innerHTML = '<option value="">請選擇縣市</option>';
+            for (const city in data) {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            }
+
+            citySelect.addEventListener('change', function() {
+                districtSelect.innerHTML = '<option value="">請選擇鄉鎮市區</option>';
+                zipInput.value = '';
+                const selectedCity = this.value;
+
+                if (selectedCity && data[selectedCity]) {
+                    data[selectedCity].forEach(district => {
+                        const option = document.createElement('option');
+                        option.value = district.name;
+                        option.textContent = district.name;
+                        option.dataset.zip = district.zip;
+                        districtSelect.appendChild(option);
+                    });
+                }
+            });
+
+            districtSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption && selectedOption.dataset.zip) {
+                    zipInput.value = selectedOption.dataset.zip;
+                } else {
+                    zipInput.value = '';
+                }
+            });
+        }
+
+
+        function setupEventListeners() {
+            demoSwitcher.addEventListener('change', function() {
+                const newClaimType = this.value;
+                state = createNewState(newClaimType, state.caseId);
+                saveState();
+                sessionStorage.removeItem(checklistEnabledKey); // 切換情境時重置列印按鈕
+                updateUIFromLoadedState();
+                updateTabLinks();
+                updatePrintChecklistAvailability();
+            });
+            
+            document.getElementById('btn-confirm').addEventListener('click', () => {
+                 // 帳號指定/複驗等檢核
+                 if (!validateDesignatedAccount()) return;
+
+                 // 繼承案件檢核（與基本資料頁一致）
+                 try {
+                    const caseId = state.caseId || caseIdFromUrl || '';
+                    const ct = state.demoClaimType || urlParams.get('claimType') || '';
+                    const needHeir = ['31','41','43','51','52','53'].includes(ct);
+                    const inheritChecked = (function(){
+                        const s = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+                        return !!s.civilLawInheritance;
+                    })();
+                    if (needHeir && inheritChecked) {
+                        const countKey = caseId ? `op6_heir_count_${caseId}` : '';
+                        let heirCount = 0;
+                        try { if (countKey) heirCount = parseInt(sessionStorage.getItem(countKey) || '0', 10) || 0; } catch(e) {}
+                        if (heirCount <= 0) {
+                            alert('已勾選「民法繼承案件」，需先新增至少 1 位繼承人。');
+                            const area = document.getElementById('heir-data-area');
+                            if (area) area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            return;
+                        }
+                    }
+                 } catch(e) {}
+
+                 // 若目前在維護區且有繼承人明細，逐筆檢核必填
+                 try {
+                    const blocks = document.querySelectorAll('#heir-details-container .heir-detail-block');
+                    for (const block of blocks) {
+                        if (!validateHeirForm(block)) {
+                            return;
+                        }
+                    }
+                 } catch(e) {}
+
+                 if (confirm('是否要完成重新編審？')) {
+                    state.version = (parseInt(state.version, 10) + 1).toString();
+                    state.isReAdjudicated = true;
+                    setFormDirty(false); 
+                    try { sessionStorage.setItem('op6_edit_dirty_any', 'false'); } catch(e) {}
+                    sessionStorage.setItem(checklistEnabledKey, 'true'); // 重新編審後，設定旗標以啟用列印按鈕
+                    saveState();
+                    alert('已重新編審完成!');
+                    location.reload();
+                 }
+            });
+
+            document.getElementById('btn-print-checklist').addEventListener('click', function() { if (!this.disabled) window.print(); });
+
+            document.getElementById('btn-return').addEventListener('click', () => { 
+                if (isFormDirty) {
+                    if (!confirm('您有未儲存的變更，是否確定要離開？')) {
+                        return;
+                    }
+                }
+                try {
+                    const ct = state.demoClaimType || urlParams.get('claimType') || '';
+                    const cid = state.caseId || caseIdFromUrl || '';
+                    const params = new URLSearchParams();
+                    if (ct) params.set('claimType', ct);
+                    if (cid) params.set('caseId', cid);
+                    const suffix = params.toString();
+                    window.location.href = suffix ? `op6.html?${suffix}` : 'op6.html';
+                } catch (e) { window.location.href = 'op6.html'; }
+            });
+
+            // 身分證字號遮罩：第一碼固定英文（自動轉大寫），後9碼僅允許數字；不做檢核碼
+            (function setupIdMasks(){
+                const sanitize = (raw) => {
+                    const s = (raw || '').toString().toUpperCase().replace(/\s+/g,'');
+                    let first = '';
+                    let digits = '';
+                    for (let i = 0; i < s.length; i++) {
+                        const ch = s[i];
+                        if (!first && /[A-Z]/.test(ch)) { first = ch; continue; }
+                        if (/[0-9]/.test(ch) && digits.length < 9) { digits += ch; }
+                        if (first && digits.length >= 9) break;
+                    }
+                    return (first + digits).slice(0, 10);
+                };
+                const wire = (el) => {
+                    if (!el) return;
+                    const apply = () => { el.value = sanitize(el.value); };
+                    el.addEventListener('input', apply);
+                    el.addEventListener('blur', apply);
+                };
+                wire(document.getElementById('ben-id'));
+                document.querySelectorAll('.heir-id').forEach(wire);
+                const details = document.getElementById('heir-details-container');
+                if (details) {
+                    details.addEventListener('input', (e) => {
+                        if (e.target && e.target.classList && e.target.classList.contains('heir-id')) {
+                            e.target.value = sanitize(e.target.value);
+                        }
+                    });
+                    details.addEventListener('blur', (e) => {
+                        if (e.target && e.target.classList && e.target.classList.contains('heir-id')) {
+                            e.target.value = sanitize(e.target.value);
+                        }
+                    }, true);
+                }
+            })();
+
+            // 受款人頁：按確認前的繼承人檢核已合併至主要確認流程
+
+            document.getElementById('btn-prepare-approval').addEventListener('click', () => {
+                try {
+                    const crossTabDirty = sessionStorage.getItem('op6_edit_dirty_any') === 'true';
+                    const saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+                    const hasConfirmed = !!saved.isReAdjudicated;
+                    if (isFormDirty || crossTabDirty || !hasConfirmed) {
+                        alert('版本不一致，無法進行初核核定。請先按下「確認」完成重新編審。');
+                        return;
+                    }
+                } catch(e) {}
+                if (confirm('是否確認進行審核？')) { alert('已送出審核。'); }
+            });
+
+            // 監聽繼承人列表 DOM 變化，動態更新跨頁繼承人數
+            try {
+                const observer = new MutationObserver(() => {
+                    const key = `op6_heir_count_${state.caseId || caseIdFromUrl || ''}`;
+                    const cnt = heirTableBody.querySelectorAll('tr').length;
+                    sessionStorage.setItem(key, String(cnt));
+                });
+                observer.observe(heirTableBody, { childList: true });
+            } catch(e) {}
+
+            // 初始化列印清單按鈕狀態
+            updatePrintChecklistAvailability();
+
+            document.getElementById('btn-cancel-case').addEventListener('click', () => {
+                if(confirm('即將註銷本受理案件，是否確認註銷？')) {
+                    alert('案件已註銷。');
+                }
+            });
+            
+            document.getElementById('btn-add-beneficiary').addEventListener('click', () => {
+                editingRowElement = null;
+                clearBeneficiaryForm(); // This also clears the session storage for the new ben form
+                const currentRowCount = beneficiaryTableBody.querySelectorAll('tr').length;
+                const newSeq = currentRowCount + 1;
+                document.getElementById('ben-seq').textContent = newSeq;
+                
+                // --- 載入新增受款人的暫存資料 ---
+                const tempDataString = sessionStorage.getItem(tempNewBenKey);
+                if (tempDataString) {
+                    const tempData = JSON.parse(tempDataString);
+                    Object.keys(tempData).forEach(key => {
+                        const input = beneficiaryMaintenanceArea.querySelector(`#${key}`);
+                        if (input) input.value = tempData[key];
+                    });
+                     // 觸發事件以更新UI
+                    setTimeout(() => {
+                        beneficiaryMaintenanceArea.querySelector('#ben-payout-method')?.dispatchEvent(new Event('change'));
+                        const addressSelect = beneficiaryMaintenanceArea.querySelector('#ben-address-type');
+                        if (addressSelect) {
+                            addressSelect.dispatchEvent(new Event('change'));
+                            if (addressSelect.value === '現住址') {
+                                const citySelect = beneficiaryMaintenanceArea.querySelector('#ben-address-city');
+                                citySelect.value = tempData['ben-address-city'] || '';
+                                citySelect.dispatchEvent(new Event('change'));
+                                setTimeout(() => {
+                                   const districtSelect = beneficiaryMaintenanceArea.querySelector('#ben-address-district');
+                                   districtSelect.value = tempData['ben-address-district'] || '';
+                                   districtSelect.dispatchEvent(new Event('change'));
+                                }, 50);
+                            }
+                        }
+                    }, 0);
+                }
+                showView('maintenance', false);
+            });
+
+            beneficiaryTableBody.addEventListener('click', (e) => {
+                const modifyBtn = e.target.closest('.btn-modify');
+                const deleteBtn = e.target.closest('.btn-delete');
+                
+                if (modifyBtn) {
+                    const row = modifyBtn.closest('.beneficiary-row');
+                    editingRowElement = row; 
+                    populateBeneficiaryForm(row);
+                    showView('maintenance', false);
+                }
+
+                if (deleteBtn) {
+                    confirmDelete(deleteBtn);
+                }
+            });
+
+
+            document.getElementById('btn-return-to-list').addEventListener('click', () => {
+                sessionStorage.removeItem(tempNewBenKey);
+                showView('list');
+            });
+            document.getElementById('btn-clear-beneficiary-form').addEventListener('click', clearBeneficiaryForm);
+            
+            document.getElementById('btn-save-beneficiary').addEventListener('click', () => {
+                if (!validateBeneficiaryForm()) {
+                    return; 
+                }
+
+                const seq = document.getElementById('ben-seq').textContent;
+                const name = document.getElementById('ben-name').value;
+                const id = document.getElementById('ben-id').value;
+                const relationSelect = document.getElementById('ben-relation');
+                const relationText = relationSelect.options[relationSelect.selectedIndex].text.substring(2);
+
+                if (editingRowElement) { 
+                    const cells = editingRowElement.querySelectorAll('.cell');
+                    cells[2].textContent = relationText;
+                    cells[3].textContent = name;
+                    cells[4].textContent = id;
+                    alert('受款人資料修改成功！');
+                } else {
+                    const newBeneficiaryData = {
+                        dob: document.getElementById('ben-dob').value,
+                        phone: document.getElementById('ben-phone').value,
+                        mobile: document.getElementById('ben-mobile').value,
+                        payoutMethod: document.getElementById('ben-payout-method').value,
+                        addressType: document.getElementById('ben-address-type').value,
+                        zip: document.getElementById('ben-zip').value,
+                        city: document.getElementById('ben-address-city').value,
+                        district: document.getElementById('ben-address-district').value,
+                        street: document.getElementById('ben-address-street').value,
+                        account: [
+                            document.getElementById('ben-account-branch').value,
+                            document.getElementById('ben-account-bank').value,
+                            document.getElementById('ben-account-number').value
+                        ],
+                        heirs: [] // 新增的受款人預設繼承人為空
+                    };
+                    mockBeneficiaryDetails[id] = newBeneficiaryData;
+
+                    const newRow = document.createElement('div');
+                    newRow.className = 'list-row beneficiary-row';
+                    newRow.innerHTML = `
+                        <div class="cell">${seq}</div>
+                        <div class="cell"><input class="form-check-input" type="checkbox"></div>
+                        <div class="cell">${relationText}</div>
+                        <div class="cell">${name}</div>
+                        <div class="cell">${id}</div>
+                        <div class="cell">0</div>
+                        <div class="cell">0</div>
+                        <div class="cell">0</div>
+                        <div class="cell op-col-actions">
+                            <button class="btn btn-sm btn-outline-primary me-1 btn-modify" title="修改"><i class="bi bi-pencil-square"></i> 修改</button>
+                            <button class="btn btn-sm btn-outline-danger btn-delete" title="刪除"><i class="bi bi-trash"></i> 刪除</button>
+                        </div>
+                    `;
+                    beneficiaryTableBody.appendChild(newRow);
+                    sessionStorage.removeItem(tempNewBenKey); // 成功新增後清除暫存
+                    alert('受款人資料新增成功！');
+                }
+                
+                editingRowElement = null;
+                setFormDirty(true);
+                const beneficiaryCount = beneficiaryTableBody.querySelectorAll('.beneficiary-row').length;
+                document.getElementById('display-applicant-count').textContent = beneficiaryCount;
+                recalculateAmounts(); 
+                showView('list');
+            });
+
+
+            document.getElementById('ben-payout-method').addEventListener('change', function() {
+                const selectedMethod = this.value;
+                document.querySelectorAll('#beneficiary-maintenance-area > .beneficiary-section > div[data-payout-method]').forEach(container => {
+                    const visibleMethods = container.getAttribute('data-payout-method').split(',');
+                    container.style.display = visibleMethods.includes(selectedMethod) ? '' : 'none';
+                });
+                const bankAccountField = document.getElementById('ben-account-bank');
+                const bankAccountField2 = document.getElementById('ben-account-bank-2'); 
+                if (selectedMethod === '1') { 
+                    bankAccountField.value = '0000';
+                    bankAccountField.disabled = true;
+                    bankAccountField2.value = '0000';
+                    bankAccountField2.disabled = true;
+                } else {
+                    bankAccountField.disabled = false;
+                    if(bankAccountField.value === '0000') bankAccountField.value = '';
+                    bankAccountField2.disabled = false;
+                    if(bankAccountField2.value === '0000') bankAccountField2.value = '';
+                }
+            });
+
+            document.getElementById('ben-address-type').addEventListener('change', function() {
+                const addressGroup = document.getElementById('ben-address-group');
+                const addressFields = addressGroup.querySelectorAll('input, select');
+                const isDisabled = this.value === '戶籍地址';
+
+                addressFields.forEach(field => {
+                    field.disabled = isDisabled;
+                     if(isDisabled) field.value = '';
+                });
+                 if(isDisabled) {
+                   const citySelect = addressGroup.querySelector('.address-city');
+                   citySelect.dispatchEvent(new Event('change'));
+                 }
+            });
+
+            beneficiaryTableBody.addEventListener('change', function(e) {
+                if (e.target.matches('.form-check-input')) {
+                    const currentCheckbox = e.target;
+                    if (currentCheckbox.checked) {
+                        const allCheckboxes = beneficiaryTableBody.querySelectorAll('.form-check-input');
+                        allCheckboxes.forEach(cb => {
+                            if (cb !== currentCheckbox) {
+                                cb.checked = false;
+                            }
+                        });
+                    }
+                    recalculateAmounts();
+                }
+            });
+
+            heirCountInput.addEventListener('input', updateHeirSectionVisibility);
+            
+            heirDataArea.addEventListener('click', (e) => {
+                const modifyBtn = e.target.closest('.btn-modify-heir');
+                if (modifyBtn) {
+                    const row = modifyBtn.closest('.heir-row');
+                    const cells = row.querySelectorAll('.cell');
+                    const heirData = {
+                        seq: cells[0].textContent,
+                        relation: cells[1].textContent,
+                        name: cells[2].textContent,
+                        id: cells[3].textContent,
+                    };
+                    generateSingleHeirForm(heirData);
+                }
+                
+                if (e.target.closest('#btn-add-heir')) {
+                    const newSeq = heirTableBody.querySelectorAll('.heir-row').length + 1;
+                    generateSingleHeirForm({ seq: newSeq });
+                }
+
+                if (e.target.closest('.btn-save-heir')) {
+                    const currentBlock = e.target.closest('.heir-detail-block');
+                    if (!validateHeirForm(currentBlock)) {
+                        return;
+                    }
+                    
+                    const beneficiaryId = document.getElementById('ben-id').value;
+                    const seq = currentBlock.querySelector('.heir-seq').textContent.trim();
+                    const relationSelect = currentBlock.querySelector('.heir-relation');
+                    const relationText = relationSelect.options[relationSelect.selectedIndex].text.substring(2);
+                    const name = currentBlock.querySelector('.heir-name').value;
+                    const id = currentBlock.querySelector('.heir-id').value;
+                    
+                    const newHeirData = { seq, relation: relationText, name, id };
+                    const beneficiaryData = mockBeneficiaryDetails[beneficiaryId];
+
+                    if (beneficiaryData) {
+                        if (!beneficiaryData.heirs) beneficiaryData.heirs = [];
+                        
+                        const existingHeirIndex = beneficiaryData.heirs.findIndex(h => h.seq === seq);
+
+                        if (existingHeirIndex > -1) {
+                            beneficiaryData.heirs[existingHeirIndex] = newHeirData;
+                        } else {
+                            newHeirData.seq = (beneficiaryData.heirs.length + 1).toString();
+                            beneficiaryData.heirs.push(newHeirData);
+                        }
+                    }
+                    
+                    renderHeirList(beneficiaryId);
+                    sessionStorage.removeItem(tempNewHeirKey);
+                    showHeirView('list');
+                }
+                
+                if (e.target.closest('.btn-return-heir-list')) {
+                    sessionStorage.removeItem(tempNewHeirKey); // 返回後清除
+                    showHeirView('list');
+                }
+                
+                if (e.target.closest('.btn-delete-heir')) {
+                    if (confirm('是否進行刪除？')) {
+                        const beneficiaryId = document.getElementById('ben-id').value;
+                        const rowToDelete = e.target.closest('.heir-row');
+                        const seqToDelete = rowToDelete.querySelectorAll('.cell')[0].textContent.trim();
+                        const beneficiaryData = mockBeneficiaryDetails[beneficiaryId];
+
+                        if (beneficiaryData && beneficiaryData.heirs) {
+                            beneficiaryData.heirs = beneficiaryData.heirs.filter(h => h.seq !== seqToDelete);
+                            beneficiaryData.heirs.forEach((h, index) => {
+                                h.seq = (index + 1).toString();
+                            });
+                        }
+                        renderHeirList(beneficiaryId);
+                        alert('刪除成功！');
+                    }
+                }
+            });
+            
+            heirDetailsContainer.addEventListener('change', e => {
+                if (e.target.classList.contains('heir-payout-method')) {
+                    const block = e.target.closest('.heir-detail-block');
+                    const selectedMethod = e.target.value;
+                    
+                    block.querySelectorAll('[data-heir-payout-method]').forEach(el => {
+                        const visibleMethods = el.getAttribute('data-heir-payout-method').split(',');
+                        el.style.display = visibleMethods.includes(selectedMethod) ? '' : 'none';
+                    });
+                    
+                    const bankFields = block.querySelectorAll('.heir-account-bank');
+                    bankFields.forEach(field => {
+                        if (selectedMethod === '1') {
+                            field.value = '0000';
+                            field.disabled = true;
+                        } else {
+                            field.disabled = false;
+                            if (field.value === '0000') field.value = '';
+                        }
+                    });
+
+                    const accountNameItem = block.querySelector('.heir-account-name-item');
+                    if (accountNameItem) {
+                        const accountNameNeeded = ['1', '2', '5', '7', '8'].includes(selectedMethod);
+                        accountNameItem.style.display = accountNameNeeded ? '' : 'none';
+                    }
+                }
+                if (e.target.classList.contains('heir-addr-same-as-prev')) {
+                    const currentBlock = e.target.closest('.heir-detail-block');
+                    const prevBlock = currentBlock.previousElementSibling;
+                    const addressGroup = currentBlock.querySelector('.heir-address-group');
+                    const inputs = addressGroup.querySelectorAll('input, select');
+
+                    if (e.target.checked && prevBlock) {
+                        const prevInputs = prevBlock.querySelectorAll('.heir-address-group input, .heir-address-group select');
+                        inputs.forEach((input, index) => {
+                            if (prevInputs[index]) {
+                                input.value = prevInputs[index].value;
+                                input.disabled = true;
+                            }
+                        });
+                    } else {
+                        inputs.forEach(input => {
+                            input.disabled = false;
+                        });
+                    }
+                }
+                 if (e.target.classList.contains('heir-address-type')) {
+                    const block = e.target.closest('.heir-detail-block');
+                    const addressGroup = block.querySelector('.heir-address-group');
+                    const fields = addressGroup.querySelectorAll('input, select');
+                    const isDisabled = e.target.value === '戶籍地址';
+                    fields.forEach(field => {
+                        field.disabled = isDisabled;
+                        if(isDisabled) field.value = '';
+                    });
+                     if(isDisabled) {
+                       const citySelect = addressGroup.querySelector('.heir-city');
+                       citySelect.dispatchEvent(new Event('change'));
+                     }
+                }
+            });
+
+            document.getElementById('btn-split-amount').addEventListener('click', () => {
+                const totalAmountText = document.getElementById('display-approved-amount').textContent;
+                const totalAmount = parseFloat(totalAmountText.replace(/,/g, '')) || 0;
+            const mainTableRows = document.querySelectorAll('#beneficiary-table-body .beneficiary-row');
+                const beneficiaryCount = mainTableRows.length;
+
+                document.getElementById('total-allocatable-amount').value = totalAmount.toLocaleString('en-US');
+                const spanElement = Array.from(amountSplitModalEl.querySelectorAll('.input-group-text')).find(el => el.textContent === '總受款人數');
+                if (spanElement && spanElement.nextElementSibling) {
+                    spanElement.nextElementSibling.value = beneficiaryCount;
+                }
+
+                const splitTableBody = document.getElementById('split-table-body');
+                splitTableBody.innerHTML = ''; 
+
+                if (beneficiaryCount > 0) {
+                    mainTableRows.forEach(row => {
+                        const cells = row.querySelectorAll('.cell');
+                        const seq = cells[0].textContent;
+                        const name = cells[3].textContent;
+                        const currentAmount = cells[5].textContent;
+                        const currentAmountValue = parseFloat(currentAmount.replace(/,/g, '')) || 0;
+
+                        let percent = 0;
+                        if (totalAmount > 0) {
+                            percent = Math.round((currentAmountValue / totalAmount) * 100);
+                        }
+
+                        const newRow = document.createElement('tr');
+                        newRow.innerHTML = `
+                            <td class="align-middle">${seq}</td>
+                            <td class="align-middle">${name}</td>
+                            <td><input type="text" class="form-control split-amount" value="${currentAmount}"></td>
+                            <td><input type="text" class="form-control split-percent" value="${percent}"></td>
+                        `;
+                        splitTableBody.appendChild(newRow);
+                    });
+                }
+                amountSplitModal.show();
+            });
+
+            document.getElementById('split-table-body').addEventListener('input', (e) => {
+                const totalAmount = parseFloat(document.getElementById('total-allocatable-amount').value.replace(/,/g, ''));
+                if (isNaN(totalAmount) || totalAmount === 0) return;
+
+                const target = e.target;
+                const currentRow = target.closest('.beneficiary-row');
+                const amountInput = currentRow.querySelector('.split-amount');
+                const percentInput = currentRow.querySelector('.split-percent');
+
+                if (target.classList.contains('split-amount')) {
+                    const amount = parseFloat(amountInput.value.replace(/,/g, ''));
+                    if (!isNaN(amount)) {
+                        const percent = (amount / totalAmount) * 100;
+                        percentInput.value = Math.round(percent);
+                    } else {
+                        percentInput.value = '';
+                    }
+                } else if (target.classList.contains('split-percent')) {
+                    const percent = parseFloat(percentInput.value);
+                    if (!isNaN(percent)) {
+                        const amount = (totalAmount * percent) / 100;
+                        amountInput.value = Math.round(amount).toLocaleString('en-US');
+                    } else {
+                        amountInput.value = '';
+                    }
+                }
+            });
+
+            document.getElementById('btn-split-confirm').addEventListener('click', () => {
+                const totalAmount = parseFloat(document.getElementById('total-allocatable-amount').value.replace(/,/g, ''));
+                let sum = 0;
+                const modalAmountInputs = document.querySelectorAll('#split-table-body .split-amount');
+                modalAmountInputs.forEach(input => {
+                    const amount = parseFloat(input.value.replace(/,/g, '') || 0);
+                    if (!isNaN(amount)) {
+                        sum += amount;
+                    }
+                });
+
+                if (Math.round(sum) !== totalAmount) {
+                    alert(`分配總額(${sum.toLocaleString('en-US')})與可分配總金額(${totalAmount.toLocaleString('en-US')})不符，請重新確認。`);
+                } else {
+                    const mainTableRows = document.querySelectorAll('#beneficiary-table-body .beneficiary-row');
+                    
+                    modalAmountInputs.forEach((input, index) => {
+                        if (mainTableRows[index]) {
+                            const newAmount = parseFloat(input.value.replace(/,/g, '') || 0).toLocaleString('en-US');
+                            const cells = mainTableRows[index].querySelectorAll('.cell');
+                            cells[5].textContent = newAmount;
+                            cells[7].textContent = newAmount;
+                        }
+                    });
+                    
+                    const rowsWithAmount = [];
+                    mainTableRows.forEach(row => {
+                        const amountText = row.querySelectorAll('.cell')[5].textContent;
+                        const amount = parseFloat(amountText.replace(/,/g, '')) || 0;
+                        if (amount > 0) {
+                            rowsWithAmount.push(row);
+                        }
+                    });
+
+                    if (rowsWithAmount.length === 1) {
+                        const designatedRow = rowsWithAmount[0];
+                        mainTableRows.forEach(row => {
+                            const checkbox = row.querySelector('.form-check-input');
+                            if (checkbox) {
+                                checkbox.checked = (row === designatedRow);
+                            }
+                        });
+                    } else {
+                        mainTableRows.forEach(row => {
+                            const checkbox = row.querySelector('.form-check-input');
+                            if (checkbox) {
+                                checkbox.checked = false;
+                            }
+                        });
+                    }
+                    
+                    alert('金額分配完成！已將金額更新回受款人列表。');
+                    amountSplitModal.hide();
+                }
+            });
+            
+            document.querySelectorAll('#myTab .nav-link').forEach(tabLink => {
+                tabLink.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    if (this.classList.contains('active')) {
+                        return;
+                    }
+                    const currentActiveTab = document.querySelector('#myTab .nav-link.active');
+                    if (currentActiveTab && currentActiveTab.id === 'tab-beneficiary') {
+                        if (!validateDesignatedAccount()) {
+                            return; 
+                        }
+                    }
+                    saveState();
+                    window.location.href = this.getAttribute('href');
+            });
+
+            // Enter 導覽（事件委派）：在受款人頁籤以 Enter 跳到下一個可輸入元件（不提交、不觸發即時檢核）
+            (function setupEnterNavigation(){
+                const scope = document.getElementById('pane-beneficiary');
+                if (!scope) return;
+                const getFocusables = () => Array.from(scope.querySelectorAll('input, select'))
+                    .filter(el => !el.disabled && el.offsetParent !== null);
+                scope.addEventListener('keydown', function(e){
+                    const target = e.target;
+                    if (e.key === 'Enter' && (target instanceof HTMLElement) && (target.matches('input, select'))) {
+                        e.preventDefault();
+                        const list = getFocusables();
+                        const idx = list.indexOf(target);
+                        if (idx > -1 && idx < list.length - 1) {
+                            list[idx + 1].focus();
+                        }
+                    }
+                });
+            })();
+        });
+            
+            const saveTempBeneficiaryData = () => {
+                if (editingRowElement) return; // 只在新增模式下暫存
+                setFormDirty(true);
+                const formData = {};
+                beneficiaryMaintenanceArea.querySelectorAll('input, select').forEach(el => {
+                    if (el.id) formData[el.id] = el.value;
+                });
+                sessionStorage.setItem(tempNewBenKey, JSON.stringify(formData));
+            };
+            beneficiaryMaintenanceArea.addEventListener('input', saveTempBeneficiaryData);
+            beneficiaryMaintenanceArea.addEventListener('change', saveTempBeneficiaryData);
+
+            ['ben-account-branch-2', 'ben-account-bank-2', 'ben-account-number-2'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.addEventListener('paste', e => e.preventDefault());
+            });
+            heirDetailsContainer.addEventListener('paste', e => {
+                if (e.target.matches('#heir-account-branch-2, #heir-account-bank-2, #heir-account-number-2')) {
+                    e.preventDefault();
+                }
+            });
+
+
+            heirDetailsContainer.addEventListener('input', () => {
+                 const currentHeirBlock = heirDetailsContainer.querySelector('.heir-detail-block');
+                 if(currentHeirBlock && !editingRowElement) { // 確保是在新增繼承人
+                    const formData = {};
+                    currentHeirBlock.querySelectorAll('input, select').forEach(el => {
+                        if(el.id) formData[el.id] = el.value;
+                    });
+                    sessionStorage.setItem(tempNewHeirKey, JSON.stringify(formData));
+                 }
+            });
+
+        }
+
+        loadState();
+        saveState();
+        updateUIFromLoadedState();
+        updateTabLinks();
+
+        // 若從「基本資料」勾選「民法繼承案件」而尚無繼承人，導入本頁顯示新增繼承人畫面
+        try {
+            const openKey = `op6_open_heir_add_${state.caseId || caseIdFromUrl || ''}`;
+            if (sessionStorage.getItem(openKey) === 'true') {
+                const heirCountInput = document.getElementById('heir-count');
+                if (heirCountInput) { heirCountInput.value = '1'; }
+                updateHeirSectionVisibility();
+                sessionStorage.removeItem(openKey);
+            }
+        } catch(e) {}
+        setupEventListeners();
+        setupDynamicAddress(document.getElementById('beneficiary-maintenance-area'), { city: '.address-city', district: '.address-district', zip: '.address-zip' }, taiwanDistrictsAndZips);
+        populateCountryDropdown(document.getElementById('foreign-addr-country'));
+        
+        handleEnterAsTab(document.getElementById('beneficiary-maintenance-area'));
+        handleEnterAsTab(amountSplitModalEl);
+        
+        document.getElementById('ben-payout-method').dispatchEvent(new Event('change'));
+        document.getElementById('ben-address-type').dispatchEvent(new Event('change'));
+    });
+    </script>
+</body>
+</html>
