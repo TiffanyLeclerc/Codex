@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更正作業 - 勞退個人異動查詢 (op6_edit6.html)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+      body { background-color: #fff; }
+      .card-header { display: flex; justify-content: space-between; align-items: center; }
+      .btn-toolbar { justify-content: flex-end; }
+      .form-text-display { padding-top: 0; padding-bottom: 0; margin-bottom: 0; font-size: 1rem; line-height: 1.4; color: #212529; font-weight: bold; min-height: 0; display: inline; }
+      .col-form-label:not(.no-colon)::after { content: '：'; }
+      .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
+      .nav-tabs .nav-link { white-space: nowrap; }
+      .table-responsive { margin-top: 1rem; }
+      .table th, .table td { vertical-align: middle; text-align: center; font-size: 0.9rem; white-space: nowrap;}
+      .table thead th hr { margin: 0.25rem 0; }
+      
+      /* 增加頁面底部留白，避免內容過於擁擠（與 op6_edit7 一致） */
+      .card-body { padding-bottom: 2.5rem; }
+      
+      .form-field-container { display: flex; align-items: baseline; width: 100%; gap: 0; }
+      .form-field-container .col-form-label { flex-shrink: 0; text-align: left; padding-right: 0; white-space: nowrap; min-width: auto; }
+      .form-field-container .field-content { flex-grow: 1; }
+
+      /* 三欄自動補位（與案件記事一致） */
+      .flex-form-container { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 16px; row-gap: 8px; margin: 0; }
+      .flex-form-item { box-sizing: border-box; padding: 0; margin: 0; }
+      
+      .issuance-section-title { font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+      .pagination-controls { display: flex; justify-content: center; align-items: center; margin-top: 1rem; }
+      .pagination-controls .page-info { margin: 0 1rem; font-weight: bold; }
+      .detail-header { border-bottom: 2px solid #0d6efd; padding-bottom: 0.5rem; }
+      
+      /* Styles for new components */
+      .demo-switcher { background-color: #fff3cd; border: 1px solid #ffeeba; }
+      .form-select.size-auto { width: auto; }
+      
+      /* Alignment styles */
+      .dept-align { text-align: left !important; padding-left: 1.5rem !important; }
+      .rate-align { text-align: left !important; padding-left: 2rem !important; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div id="modification-page">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">更正作業</h2>
+                    <div id="common-buttons" class="btn-toolbar" role="toolbar">
+                         <button id="btn-print-pdf" type="button" class="btn btn-light border me-2"><i class="bi bi-file-earmark-pdf"></i> 頁面(或pdf)列印</button>
+                         <button id="btn-return-main" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> 返回</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="p-3 mb-3 rounded demo-switcher">
+                        <div class="row align-items-center">
+                            <div class="col-auto"><strong class="text-danger"><i class="bi bi-tools"></i> 情境快速切換器 (Demo專用)</strong></div>
+                            <div class="col-auto"><label for="demoClaimTypeSwitcher" class="col-form-label">切換請領種類查看介面變化</label></div>
+                            <div class="col-auto"><select id="demoClaimTypeSwitcher" class="form-select size-auto"></select></div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-3 mb-3 border bg-white rounded">
+                         <div class="form-field-container">
+                            <label class="col-form-label">請領種類</label>
+                            <div class="field-content"><p id="display-claim-type" class="form-text-display mb-0"></p></div>
+                        </div>
+                    </div>
+                    
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-basic" href="op6_edit.html">基本資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-beneficiary" href="op6_edit2.html">受款人</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-approval-letter" href="op6_edit3.html">核定函</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-issuance-data" href="op6_edit4.html">請領核發資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-other-benefits" href="op6_edit5.html">請領其他給付資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link active" id="tab-pension-changes" href="op6_edit6.html">勞退個人異動查詢</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-account-details" href="op6_edit7.html">個人專戶明細資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-case-notes" href="op6_edit8.html">案件記事</a></li>
+                    </ul>
+
+                    <div class="tab-content border border-top-0 p-3" id="myTabContent">
+                        <div class="tab-pane fade show active" role="tabpanel">
+                            
+                            <div class="p-3 mb-4">
+                                <div class="flex-form-container">
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">受理編號</label><div class="field-content"><p id="display-case-id" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工姓名</label><div class="field-content"><p id="display-laborer-name" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工身分證字號</label><div class="field-content"><p id="display-laborer-id" class="form-text-display"></p></div></div></div>
+
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工出生日期</label><div class="field-content"><p id="display-laborer-dob" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">版次</label><div class="field-content"><p id="display-version" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"></div>
+                                </div>
+                            </div>
+                            
+                            <div id="list-view">
+                                <h5 class="issuance-section-title">※ 勞退個人異動單位清單 (顯示各單位最後一筆)</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered table-sm">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>提繳編號</th><th>異動別</th><th>生效日</th><th>提繳工資</th><th class="dept-align">身　　部＊</th><th>雇提率％　個提率％</th><th>計費年月</th><th>異動原因</th><th>鍵入代號</th><th>更新日</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="list-view-body"></tbody>
+                                    </table>
+                                </div>
+                                <div id="list-pagination-container" class="pagination-controls"></div>
+                            </div>
+
+                            <div id="detail-view" style="display: none;">
+                                 <div class="d-flex justify-content-end">
+                                    <button id="back-to-list" type="button" class="btn btn-secondary btn-sm mb-3"><i class="bi bi-arrow-left-circle"></i> 返回清單</button>
+                                 </div>
+                                 <div id="detail-content"></div>
+                                 <div id="detail-pagination-container" class="pagination-controls"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const claimTypeMap = {
+            '31': '提前請領退休金(31)', '32': '提前請領月退休金(32)', '41': '一次退休金(41)',
+            '42': '月退休金(42)', '43': '續提退休金(43)', '46': '續提月退休金(46)',
+            '51': '死亡退休金(51)', '52': '月退死亡退休金(52)', '53': '死亡退休金(含月退)(53)'
+        };
+        const demoSwitcher = document.getElementById('demoClaimTypeSwitcher');
+
+        function populateHeaderAndSwitcher() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const caseIdFromUrl = urlParams.get('caseId') || (function(){ try { return sessionStorage.getItem('op6_current_case_id'); } catch(e){ return null; } })() || '113-1-08-012345';
+            const claimTypeFromUrl = urlParams.get('claimType') || '31';
+            const storageKey = `op6_edit_state_${caseIdFromUrl}`;
+            const defaults = { demoClaimType: claimTypeFromUrl, caseId: caseIdFromUrl, laborerName: '王大明', laborerId: 'A123456789', laborerDob: '0600101', version: '1' };
+            const loaded = (function(){ try { return JSON.parse(sessionStorage.getItem(storageKey)) || {}; } catch(e) { return {}; } })();
+            // 以 URL 參數為準，並補齊缺漏欄位（不覆蓋已存在值）
+            if (claimTypeFromUrl) loaded.demoClaimType = claimTypeFromUrl;
+            loaded.caseId = caseIdFromUrl;
+            const state = { ...defaults, ...loaded };
+            Object.keys(defaults).forEach(k => { if (state[k] === undefined || state[k] === null || state[k] === '') state[k] = defaults[k]; });
+            try { sessionStorage.setItem(storageKey, JSON.stringify(state)); } catch(e) {}
+            try { sessionStorage.setItem('op6_current_case_id', state.caseId || caseIdFromUrl); } catch(e) {}
+
+            // Populate Switcher
+            if (demoSwitcher.options.length === 0) {
+                for (const key in claimTypeMap) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = claimTypeMap[key];
+                    demoSwitcher.appendChild(option);
+                }
+            }
+            demoSwitcher.value = claimTypeFromUrl;
+            
+            // 根據從 sessionStorage 讀取到的 state 來填入欄位資料
+            document.getElementById('display-claim-type').textContent = claimTypeMap[claimTypeFromUrl] || '未知';
+            const formatCaseId = (val) => {
+                const s = (val || '').toString();
+                if (!s) return '';
+                const parts = s.split('-');
+                for (let i = parts.length - 1; i >= 0; i--) {
+                    if (parts[i] === '' || parts[i] === undefined || parts[i] === null) { parts.pop(); } else { break; }
+                }
+                return parts.join('-');
+            };
+            document.getElementById('display-case-id').textContent = formatCaseId(caseIdFromUrl);
+            document.getElementById('display-version').textContent = state.version || '1'; 
+            document.getElementById('display-laborer-name').textContent = state.laborerName || '王大明';
+            document.getElementById('display-laborer-id').textContent = state.laborerId || 'A123456789';
+            document.getElementById('display-laborer-dob').textContent = state.laborerDob || '0600101';
+            updateTabLinks(caseIdFromUrl, claimTypeFromUrl);
+        }
+        
+        demoSwitcher.addEventListener('change', function() {
+            const url = new URL(window.location);
+            url.searchParams.set('claimType', this.value);
+            // 保留 caseId 參數，若不存在則不變更
+            window.location.href = url.toString();
+        });
+
+        function updateTabLinks(caseId, claimType) {
+            document.querySelectorAll('#myTab .nav-link').forEach(tabLink => {
+                const baseHref = tabLink.getAttribute('href').split('?')[0];
+                if (baseHref === '#' || !baseHref) return;
+                const params = new URLSearchParams();
+                if (claimType) params.set('claimType', claimType);
+                if (caseId) params.set('caseId', caseId);
+                tabLink.setAttribute('href', `${baseHref}?${params.toString()}`);
+            });
+        }
+
+
+        // --- ORIGINAL SCRIPT FOR PAGE FUNCTIONALITY (UNCHANGED) ---
+        const listView = document.getElementById('list-view');
+        const detailView = document.getElementById('detail-view');
+        const listViewBody = document.getElementById('list-view-body');
+        const listPaginationContainer = document.getElementById('list-pagination-container');
+        const detailContent = document.getElementById('detail-content');
+        const detailPaginationContainer = document.getElementById('detail-pagination-container');
+        const backToListButton = document.getElementById('back-to-list');
+
+        function generateFakeData() {
+            const companySuffixes = ['科技', '國際', '實業', '開發', '企業', '控股', '顧問', '物流', '餐飲'];
+            const firstNames = ['陳', '林', '黃', '張', '李', '王', '吳', '劉', '蔡'];
+            const allTransactions = [];
+            const uniqueUnitIds = new Set();
+            while (uniqueUnitIds.size < 25) {
+                uniqueUnitIds.add(Math.floor(10000000 + Math.random() * 90000000).toString());
+            }
+
+            uniqueUnitIds.forEach(unitId => {
+                const unitName = `${firstNames[Math.floor(Math.random() * firstNames.length)]}氏${companySuffixes[Math.floor(Math.random() * companySuffixes.length)]}`;
+                let recordCount = Math.floor(Math.random() * 10) + 21;
+                let currentDate = new Date(2015 + Math.floor(Math.random() * 8), Math.floor(Math.random() * 12), 1);
+                let currentWage = 30000 + Math.floor(Math.random() * 5) * 1200;
+                
+                allTransactions.push(createRecord(unitId, unitName, '4雇提', currentDate, currentWage, '到職'));
+                
+                for (let i = 0; i < recordCount - 2; i++) {
+                    currentDate.setMonth(currentDate.getMonth() + Math.floor(Math.random() * 6) + 3);
+                    if (Math.random() > 0.3) { 
+                        currentWage += Math.floor(Math.random() * 3 + 1) * 600;
+                        allTransactions.push(createRecord(unitId, unitName, '3薪調', currentDate, currentWage, ''));
+                    } else { 
+                        allTransactions.push(createRecord(unitId, unitName, '*1資調', currentDate, currentWage, ''));
+                    }
+                }
+                
+                currentDate.setMonth(currentDate.getMonth() + Math.floor(Math.random() * 6) + 3);
+                allTransactions.push(createRecord(unitId, unitName, '2雇停', currentDate, currentWage, '離職'));
+            });
+
+            return allTransactions;
+        }
+
+        function createRecord(unitId, unitName, type, date, wage, reason) {
+            const rocDate = `${date.getFullYear() - 1911}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+            const billDate = `1 ${rocDate.substring(0, 5)}`;
+            const updateDate = rocDate;
+            return { unitId, unitName, type, effectiveDate: rocDate, wage, dept: '1', empRate: 6, indRate: 0, billDate, reason, entryCode: 'W73039', updateDate };
+        }
+
+        const allTransactions = generateFakeData();
+        const latestRecordsForList = getLatestRecords(allTransactions);
+        let listPagination = { currentPage: 1, itemsPerPage: 20, totalPages: Math.ceil(latestRecordsForList.length / 20) };
+        let detailPagination = { currentPage: 1, itemsPerPage: 20, totalPages: 1, currentUnitTransactions: [] };
+
+        function getLatestRecords(transactions) {
+            const latestRecordMap = new Map();
+            transactions.forEach(tx => {
+                const currentLatest = latestRecordMap.get(tx.unitId);
+                if (!currentLatest || parseInt(tx.effectiveDate, 10) > parseInt(currentLatest.effectiveDate, 10)) {
+                    latestRecordMap.set(tx.unitId, tx);
+                }
+            });
+            return Array.from(latestRecordMap.values()).sort((a, b) => b.effectiveDate - a.effectiveDate);
+        }
+
+        function showListView() {
+            detailView.style.display = 'none';
+            listView.style.display = 'block';
+        }
+
+        function showDetailView(unitId) {
+            detailPagination.currentUnitTransactions = allTransactions.filter(tx => tx.unitId === unitId).sort((a, b) => b.effectiveDate - a.effectiveDate);
+            detailPagination.totalPages = Math.ceil(detailPagination.currentUnitTransactions.length / detailPagination.itemsPerPage);
+            detailPagination.currentPage = 1;
+
+            renderDetailContent();
+            listView.style.display = 'none';
+            detailView.style.display = 'block';
+        }
+
+        function renderListView() {
+            listViewBody.innerHTML = '';
+            const { currentPage, itemsPerPage } = listPagination;
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const pageItems = latestRecordsForList.slice(startIndex, startIndex + itemsPerPage);
+            pageItems.forEach(tx => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><a href="#" class="view-detail-link" data-unit-id="${tx.unitId}">${tx.unitId}</a></td>
+                    <td>${tx.type}</td>
+                    <td>${tx.effectiveDate}</td>
+                    <td>${tx.wage.toLocaleString()}</td>
+                    <td class="dept-align">${tx.dept}</td>
+                    <td class="rate-align">${tx.empRate}</td>
+                    <td>${tx.billDate}</td>
+                    <td>${tx.reason}</td>
+                    <td>${tx.entryCode}</td>
+                    <td>${tx.updateDate}</td>
+                `;
+                listViewBody.appendChild(row);
+            });
+            renderPaginationControls(listPaginationContainer, listPagination, (page) => {
+                listPagination.currentPage = page;
+                renderListView();
+            });
+        }
+        
+        function renderDetailContent() {
+            const { currentPage, itemsPerPage, currentUnitTransactions } = detailPagination;
+            const unitName = currentUnitTransactions.length > 0 ? currentUnitTransactions[0].unitName : '';
+            const unitId = currentUnitTransactions.length > 0 ? currentUnitTransactions[0].unitId : '';
+            
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const pageItems = currentUnitTransactions.slice(startIndex, startIndex + itemsPerPage);
+
+            detailContent.innerHTML = `
+                <h5 class="issuance-section-title detail-header">提繳單位：${unitName} (${unitId}) - 異動明細</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr><th>異動別</th><th>生效日</th><th>提繳工資</th><th class="dept-align">身　　部＊</th><th>雇提率％　個提率％</th><th>計費年月</th><th>異動原因</th><th>鍵入代號</th><th>更新日</th></tr>
+                        </thead>
+                        <tbody>${pageItems.map(tx => `
+                            <tr>
+                                <td>${tx.type}</td>
+                                <td>${tx.effectiveDate}</td>
+                                <td>${tx.wage.toLocaleString()}</td>
+                                <td class="dept-align">${tx.dept}</td>
+                                <td class="rate-align">${tx.empRate}</td>
+                                <td>${tx.billDate}</td>
+                                <td>${tx.reason}</td>
+                                <td>${tx.entryCode}</td>
+                                <td>${tx.updateDate}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+                
+            renderPaginationControls(detailPaginationContainer, detailPagination, (page) => {
+                detailPagination.currentPage = page;
+                renderDetailContent();
+            });
+        }
+
+        function renderPaginationControls(container, paginationState, pageChangeCallback) {
+            const { currentPage, totalPages } = paginationState;
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            container.innerHTML = `
+                <button class="btn btn-outline-secondary btn-prev" ${currentPage === 1 ? 'disabled' : ''}><i class="bi bi-arrow-left"></i> 上一頁</button>
+                <span class="page-info">第 ${currentPage} / ${totalPages} 頁</span>
+                <button class="btn btn-outline-secondary btn-next" ${currentPage === totalPages ? 'disabled' : ''}>下一頁 <i class="bi bi-arrow-right"></i></button>
+            `;
+            container.querySelector('.btn-prev').addEventListener('click', () => pageChangeCallback(currentPage - 1));
+            container.querySelector('.btn-next').addEventListener('click', () => pageChangeCallback(currentPage + 1));
+        }
+
+        listViewBody.addEventListener('click', function(event) {
+            const link = event.target.closest('.view-detail-link');
+            if (link) {
+                event.preventDefault();
+                showDetailView(link.dataset.unitId);
+            }
+        });
+        backToListButton.addEventListener('click', showListView);
+
+        // 返回：導回查詢頁（攜帶請領種類／受理編號）
+        document.getElementById('btn-return-main').addEventListener('click', function() {
+            try {
+                const saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+                const ct = saved.demoClaimType || claimTypeFromUrl || '';
+                const cid = caseIdFromUrl || saved.caseId || '';
+                const params = new URLSearchParams();
+                if (ct) params.set('claimType', ct);
+                if (cid) params.set('caseId', cid);
+                const suffix = params.toString();
+                window.location.href = suffix ? `op6.html?${suffix}` : 'op6.html';
+            } catch (e) {
+                window.location.href = 'op6.html';
+            }
+        });
+
+        // PDF列印：與 op6_edit7 相同，直接呼叫瀏覽器列印
+        document.getElementById('btn-print-pdf').addEventListener('click', () => window.print());
+
+        // --- INITIAL LOAD ---
+        populateHeaderAndSwitcher();
+        renderListView();
+    });
+    </script>
+</body>
+</html>

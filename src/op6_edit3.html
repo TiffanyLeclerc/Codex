@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更正作業 - 核定函 (op6_edit3.html)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+      body { background-color: #fff; }
+      .card-header { display: flex; justify-content: space-between; align-items: center; }
+      .btn-toolbar { justify-content: flex-end; }
+      .col-form-label .required { color: red; font-weight: bold; margin-right: 2px; }
+      .form-text-display { padding-top: 0; padding-bottom: 0; margin-bottom: 0; font-size: 1rem; line-height: 1.4; color: #212529; font-weight: bold; min-height: 0; }
+      .col-form-label:not(.no-colon)::after { content: '：'; }
+      .form-control.size-auto, .form-select.size-auto, .input-group.size-auto { width: auto; display: inline-flex; }
+      .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
+      .nav-tabs .nav-link { white-space: nowrap; }
+      .demo-switcher { background-color: #fff3cd; border: 1px solid #ffeeba; }
+      .flex-form-container { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); column-gap: 16px; row-gap: 8px; }
+      .flex-form-item { margin: 0; padding: 0; }
+      .approval-letter-body { font-size: 1.1rem; line-height: 2; }
+      .approval-letter-body strong { font-weight: bold; }
+      .letter-item { padding-left: 2em; text-indent: -2em; margin-bottom: 0.5rem; }
+      .letter-subject { text-indent: 2em; }
+      
+      .form-field-container { display: flex; align-items: baseline; width: 100%; gap: 0; }
+      .form-field-container .col-form-label { flex-shrink: 0; text-align: left; padding-right: 0; white-space: nowrap; min-width: auto; }
+      .form-field-container .field-content { flex-grow: 1; }
+      .form-text-display { display: inline; }
+      .card-body { padding-bottom: 2.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div id="modification-page">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">更正作業</h2>
+                    <div id="common-buttons" class="btn-toolbar" role="toolbar">
+                        <button id="btn-confirm" type="button" class="btn btn-primary me-2"><i class="bi bi-check-circle"></i> 確認</button>
+                        <button id="btn-print-checklist" type="button" class="btn btn-info me-2" disabled><i class="bi bi-printer"></i> 受理審核清單列印</button>
+                        <button id="btn-prepare-approval" type="button" class="btn btn-success me-2"><i class="bi bi-send-check"></i> 審核</button>
+                        <button id="btn-split-amount" type="button" class="btn btn-warning me-2"><i class="bi bi-distribute-vertical"></i> 金額分割</button>
+                        <button id="btn-print-pdf" type="button" class="btn btn-light border me-2"><i class="bi bi-file-earmark-pdf"></i> 頁面(或pdf)列印</button>
+                        <button id="btn-return" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> 返回</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="p-3 mb-3 rounded demo-switcher">
+                        <div class="row align-items-center">
+                            <div class="col-auto"><strong class="text-danger"><i class="bi bi-tools"></i> 情境快速切換器 (Demo專用)</strong></div>
+                            <div class="col-auto"><label for="demoClaimTypeSwitcher" class="col-form-label">切換請領種類查看介面變化</label></div>
+                            <div class="col-auto"><select id="demoClaimTypeSwitcher" class="form-select size-auto"></select></div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 mb-3 border bg-white rounded">
+                         <div class="form-field-container">
+                            <label class="col-form-label">請領種類</label>
+                            <div class="field-content"><p id="display-claim-type" class="form-text-display mb-0"></p></div>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-basic" href="op6_edit.html">基本資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-beneficiary" href="op6_edit2.html">受款人</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link active" id="tab-approval-letter" href="op6_edit3.html">核定函</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-issuance-data" href="op6_edit4.html">請領核發資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-other-benefits" href="op6_edit5.html">請領其他給付資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-pension-changes" href="op6_edit6.html">勞退個人異動查詢</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-account-details" href="op6_edit7.html">個人專戶明細資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-case-notes" href="op6_edit8.html">案件記事</a></li>
+                    </ul>
+
+                    <div class="tab-content border border-top-0 p-3" id="myTabContent">
+                        <div class="tab-pane fade show active" id="pane-approval-letter" role="tabpanel">
+                            
+                            <div class="p-3 mb-4">
+                                <div class="flex-form-container">
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">受理編號</label><div class="field-content"><p id="display-case-id" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工姓名</label><div class="field-content"><p id="display-laborer-name" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工身分證字號</label><div class="field-content"><p id="display-laborer-id" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工出生日期</label><div class="field-content"><p id="display-laborer-dob" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">版次</label><div class="field-content"><p id="display-version" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">格式</label><div class="field-content"><p id="display-approval-format" class="form-text-display"></p></div></div></div>
+                                </div>
+                            </div>
+
+                            <div style="display: none;">
+                                <input type="text" id="applyDate" value="1130615">
+                                <input type="text" id="approvalFormat" value="51">
+                                <p id="total-contribution-years">15年3月</p>
+                                <p id="total-principal">1,250,000</p>
+                                <p id="total-earnings">355,000</p>
+                                <p id="guaranteed-earnings">12,000</p>
+                                <p id="approved-amount">1,605,000</p>
+                            </div>
+
+                            <div class="p-3 approval-letter-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-12 d-flex align-items-center">
+                                        <strong>受文者：</strong>
+                                        <p id="approval-letter-recipient" class="mb-0 ms-2"></p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-12 d-flex align-items-center">
+                                        <strong>地址：</strong>
+                                        <p id="approval-letter-address" class="mb-0 ms-2">（此處應帶入受款人地址）</p>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <strong>主旨：</strong>
+                                        <p id="approval-letter-subject" class="mt-1 letter-subject"></p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <strong>說明：</strong>
+                                        <div id="approval-letter-description" class="mt-1"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const claimTypeFromUrl = urlParams.get('claimType');
+        const caseIdFromUrl = urlParams.get('caseId');
+        const caseIdCanonical = caseIdFromUrl || (function(){ try { return sessionStorage.getItem('op6_current_case_id'); } catch(e){ return null; } })() || 'demo_case_01';
+        const storageKey = `op6_edit_state_${caseIdCanonical}`;
+
+        const claimTypeMap = {
+            '31': '提前請領退休金(31)', '32': '提前請領月退休金(32)', '41': '一次退休金(41)',
+            '42': '月退休金(42)', '43': '續提退休金(43)', '46': '續提月退休金(46)',
+            '51': '死亡退休金(51)', '52': '月退死亡退休金(52)', '53': '死亡退休金(含月退)(53)'
+        };
+        const demoSwitcher = document.getElementById('demoClaimTypeSwitcher');
+        
+        let state = {};
+
+        for (const key in claimTypeMap) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = claimTypeMap[key];
+            demoSwitcher.appendChild(option);
+        }
+
+        function defaultStateForClaim(claimType, caseId) {
+            return {
+                demoClaimType: claimType || '53',
+                caseId: caseId || '',
+                laborerName: '王大明',
+                laborerId: 'A123456789',
+                laborerDob: '0600101',
+                version: '1',
+                applyDate: '1130615',
+                beneficiaries: [ { addrZip: '100', addrDetail: '台北市中正區重慶南路1段122號' } ]
+            };
+        }
+
+        function mergeDefaults(st) {
+            const base = defaultStateForClaim((st && st.demoClaimType) || claimTypeFromUrl || '53', (st && st.caseId) || caseIdFromUrl);
+            const merged = { ...base, ...(st || {}) };
+            if (!Array.isArray(merged.beneficiaries) || merged.beneficiaries.length === 0) {
+                merged.beneficiaries = base.beneficiaries;
+            }
+            return merged;
+        }
+
+        function loadState() {
+            const savedStateJSON = sessionStorage.getItem(storageKey);
+            if (savedStateJSON) {
+                let loaded = JSON.parse(savedStateJSON);
+                if (claimTypeFromUrl && loaded.demoClaimType !== claimTypeFromUrl) {
+                    loaded.demoClaimType = claimTypeFromUrl;
+                }
+                if (caseIdFromUrl) { loaded.caseId = caseIdFromUrl; }
+                state = mergeDefaults(loaded);
+            } else {
+                state = defaultStateForClaim(claimTypeFromUrl || '53', caseIdFromUrl);
+            }
+            try { sessionStorage.setItem(storageKey, JSON.stringify(state)); } catch(e) {}
+            try { sessionStorage.setItem('op6_current_case_id', state.caseId || caseIdFromUrl || 'demo_case_01'); } catch(e) {}
+        }
+
+        function formatCaseId(val) {
+            const s = (val || '').toString();
+            if (!s) return '';
+            const parts = s.split('-');
+            for (let i = parts.length - 1; i >= 0; i--) {
+                if (parts[i] === '' || parts[i] === undefined || parts[i] === null) { parts.pop(); } else { break; }
+            }
+            return parts.join('-');
+        }
+
+        function updateUIFromLoadedState() {
+            demoSwitcher.value = state.demoClaimType || claimTypeFromUrl || '53';
+            document.getElementById('display-claim-type').textContent = claimTypeMap[demoSwitcher.value] || '未知';
+            if (!state.caseId && caseIdFromUrl) { state.caseId = caseIdFromUrl; }
+            document.getElementById('display-case-id').textContent = formatCaseId(state.caseId || '');
+            document.getElementById('display-laborer-name').textContent = state.laborerName || '';
+            document.getElementById('display-laborer-id').textContent = state.laborerId || '';
+            document.getElementById('display-laborer-dob').textContent = state.laborerDob || '';
+            document.getElementById('display-version').textContent = state.version || '1';
+            // 從隱藏的 input 讀取格式值並更新到新的位置
+            document.getElementById('display-approval-format').textContent = document.getElementById('approvalFormat').value;
+            
+            updateApprovalLetter();
+            const activeTabId = document.querySelector('#myTab .nav-link.active')?.id || 'tab-approval-letter';
+            updateButtonsForTab(activeTabId, demoSwitcher.value);
+        }
+
+        function updateApprovalLetter() {
+            const laborerName = state.laborerName || '';
+            const laborerId = state.laborerId || '';
+            const applyDateRaw = state.applyDate || document.getElementById('applyDate').value;
+            
+            let applyDateFormatted = 'XXX年X月X日';
+            if (applyDateRaw && applyDateRaw.length === 7) {
+                const year = applyDateRaw.substring(0, 3);
+                const month = applyDateRaw.substring(3, 5);
+                const day = applyDateRaw.substring(5, 7);
+                applyDateFormatted = `${year}年${month}月${day}日`;
+            }
+
+            const recipientEl = document.getElementById('approval-letter-recipient');
+            const subjectEl = document.getElementById('approval-letter-subject');
+            const descriptionEl = document.getElementById('approval-letter-description');
+            const addressEl = document.getElementById('approval-letter-address');
+
+            if(recipientEl) recipientEl.textContent = laborerName;
+            
+            if (addressEl) {
+                if (state.beneficiaries && state.beneficiaries.length > 0) {
+                    const firstBeneficiary = state.beneficiaries[0];
+                    const fullAddress = `${firstBeneficiary.addrZip || ''} ${firstBeneficiary.addrDetail || ''}`.trim();
+                    addressEl.textContent = fullAddress || '（查無受款人地址）';
+                } else {
+                    addressEl.textContent = '（查無受款人地址）';
+                }
+            }
+            
+            if(subjectEl) subjectEl.textContent = `台端（身分證統一編號：${laborerId}）於${applyDateFormatted}申請領取退休金後繼續工作提繳之勞工退休金案，經本局審查核定發給，詳如說明，請查照。`;
+            
+            if(descriptionEl) {
+                const contributionYears = document.getElementById('total-contribution-years').textContent;
+                const principal = document.getElementById('total-principal').textContent;
+                const earnings = document.getElementById('total-earnings').textContent;
+                const guaranteed = document.getElementById('guaranteed-earnings').textContent;
+                const totalAmount = document.getElementById('approved-amount').textContent;
+                descriptionEl.innerHTML = `
+                    <p class="letter-item">一、法令依據－勞工退休金條例第23條、第24條、第24條之1、第24條之2、第28條及同條例施行細則第32條、第33條、第34條。</p>
+                    <p class="letter-item">二、查台端前於112年09月12日已領取勞工退休金在案，嗣繼續工作提繳退休金至依法領取退休金之日止期間之累計提繳年資為${contributionYears}，結算勞工退休金個人專戶之本金${principal}元，加上累積收益${earnings}元（此一期間累積收益大於當地銀行二年期定期存款利率之平均數計算之保證收益${guaranteed}元，則按累積收益發給），合計${totalAmount}元，已於核發，並送交金融機構於近日內匯入申請書所指定之郵局帳號（如未入帳，請向02－23961266轉5399勞工退休金組財務及出納科洽詢。如有帳號錯誤，本局處理方式一律以書函通知）。</p>
+                    <p class="letter-item">三、依規定請領一次退休金者，其當月退休金專戶本金，以本局核定時已提繳入專戶之金額為準，如因提繳時差尚未提繳入專戶之金額，本局俟雇主繳納並經分配入個人專戶後，將無息核發請領人，仍將逕轉帳匯入原申請書所載指定之帳號。</p>
+                    <p class="letter-item">四、台端如於領取退休金後繼續工作提繳退休金，嗣後領取續提之退休金及其收益之次數，一年以一次為限。</p>
+                    <p class="letter-item">五、本核定金額單位為新臺幣元。</p>
+                    <p class="letter-item">六、台端如對本件核定結果有異議時，可來函本局勞工退休金組查詢或得依訴願法第14條第1項及第58條規定，於接到本函之翌日起30日內，繕具訴願書並檢附相關證明資料直接送交本局，經由本局向勞動部提起訴願。</p>
+                `;
+            }
+        }
+
+        function updateButtonsForTab(activeTabId, currentClaimType) {
+            const isEditableTab = ['tab-basic', 'tab-beneficiary', 'tab-case-notes'].includes(activeTabId);
+            document.getElementById('btn-confirm').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-print-checklist').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-prepare-approval').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-print-pdf').style.display = isEditableTab ? 'none' : 'block';
+            document.getElementById('btn-split-amount').style.display = 'none';
+        }
+
+        function updateTabLinks() {
+            const currentCaseId = state.caseId || caseIdFromUrl || '';
+            const currentClaimType = state.demoClaimType || demoSwitcher.value || '';
+
+            document.querySelectorAll('#myTab .nav-link').forEach(tabLink => {
+                const baseHref = tabLink.getAttribute('href').split('?')[0];
+                if (baseHref === '#' || !baseHref) return;
+                
+                const params = new URLSearchParams();
+                if (currentClaimType) params.set('claimType', currentClaimType);
+                if (currentCaseId) params.set('caseId', currentCaseId);
+                
+                tabLink.setAttribute('href', `${baseHref}?${params.toString()}`);
+            });
+        }
+
+        demoSwitcher.addEventListener('change', function() {
+            state.demoClaimType = this.value;
+            sessionStorage.setItem(storageKey, JSON.stringify(state));
+            updateUIFromLoadedState();
+            updateTabLinks();
+        });
+        
+        const btnPrint = document.getElementById('btn-print-pdf');
+        if (btnPrint) { btnPrint.addEventListener('click', () => window.print()); }
+        
+        document.getElementById('btn-return').addEventListener('click', () => {
+            const params = new URLSearchParams();
+            const ct = demoSwitcher.value || '';
+            const cid = caseIdFromUrl || '';
+            if (ct) params.set('claimType', ct);
+            if (cid) params.set('caseId', cid);
+            window.location.href = params.toString() ? `op6.html?${params}` : 'op6.html';
+        });
+
+        loadState();
+        updateUIFromLoadedState();
+        updateTabLinks();
+
+        // 審核 提示（含跨頁籤 dirty 與是否已確認檢核）
+        const btnPrepare = document.getElementById('btn-prepare-approval');
+        if (btnPrepare) {
+            btnPrepare.addEventListener('click', () => {
+                try {
+                    const crossTabDirty = sessionStorage.getItem('op6_edit_dirty_any') === 'true';
+                    const saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+                    const hasConfirmed = !!saved.isReAdjudicated;
+                    if (crossTabDirty || !hasConfirmed) {
+                        alert('版本不一致，無法進行初核核定。請先按下「確認」完成重新編審。');
+                        return;
+                    }
+                } catch(e) {}
+                if (confirm('是否確認進行審核？')) {
+                    alert('已送出審核。');
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html>

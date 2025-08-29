@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更正作業 - 案件記事 (op6_edit8.html)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+      /* --- 全域樣式與排版規則 --- */
+      body { background-color: #fff; }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .btn-toolbar { justify-content: flex-end; }
+      
+      /* [全域樣式規則]: 紅色星號 */
+      .required {
+        color: red;
+        font-weight: bold;
+        margin-right: 2px;
+      }
+      
+      /* [全域排版規則]: Label 結尾自動加上全形「：」 */
+      .col-form-label:not(.no-colon)::after {
+        content: '：';
+      }
+      
+      /* [全域排版規則]: .size-auto 實作（對齊其他頁：inline-flex） */
+      .form-control.size-auto, .form-select.size-auto {
+          width: auto;
+          display: inline-flex;
+      }
+
+      /* [全域排版規則]: 欄位名稱與內容水平排列 & 對齊 */
+      .form-field-container {
+        display: flex;
+        align-items: baseline;
+        width: 100%;
+      }
+      .form-field-container .col-form-label {
+        flex-shrink: 0;
+        text-align: left;
+        padding-right: 5px;
+        white-space: nowrap;
+        min-width: 120px; /* 確保label寬度一致以對齊 */
+      }
+       .form-field-container .field-content {
+        flex-grow: 1;
+      }
+
+      .form-text-display {
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-bottom: 0;
+        font-size: 1rem;
+        line-height: 1.4;
+        color: #212529;
+        font-weight: bold;
+        min-height: 0;
+      }
+      .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
+      .nav-tabs .nav-link { white-space: nowrap; }
+      .demo-switcher { background-color: #fff3cd; border: 1px solid #ffeeba; }
+      .table th, .table td { vertical-align: middle; text-align: center; }
+      /* 記事日期輸入框置中（控制框位置與文字對齊） */
+      .notes-table-container input[data-field="date"] {
+        display: inline-block;
+        box-sizing: content-box; /* 確保寬度以內容計算，完整顯示7碼 */
+        width: 7ch;
+        text-align: center;
+      }
+      
+      /* [區塊規則]: 案件記事資料 scroll bar */
+      .notes-table-container {
+        max-height: 400px;
+        overflow-y: auto;
+        position: relative;
+      }
+      .notes-table-container thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: #f8f9fa;
+      }
+      
+      /* [全域驗證規則]: 錯誤訊息樣式 */
+      .error-message {
+        color: red;
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+        display: block;
+        width: 100%;
+      }
+      
+      .popover-header { font-weight: bold; }
+      .phrase-list-group .list-group-item { cursor: pointer; border: none; padding: 0.5rem 0.75rem; }
+      .phrase-list-group .list-group-item:hover { background-color: #f0f0f0; }
+      
+      /* 增加頁面底部留白，避免內容過於擁擠 */
+      .card-body { padding-bottom: 2.5rem; }
+
+      /* 自動補位（彈性三欄，拋棄 table/bootstrap 排版） */
+      .flex-form-container {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        column-gap: 16px;
+        row-gap: 8px;
+        margin: 0;
+      }
+      .flex-form-item {
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+      }
+      /* Header inline layout: value sits right after the label's colon */
+      .form-field-container { gap: 0; }
+      .form-field-container .col-form-label { min-width: auto; padding-right: 0; }
+      .form-text-display { display: inline; margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div id="modification-page">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">更正作業</h2>
+                    <div id="common-buttons" class="btn-toolbar" role="toolbar">
+                        <button id="btn-confirm" type="button" class="btn btn-primary me-2"><i class="bi bi-check-circle"></i> 確認</button>
+                        <button id="btn-print-checklist" type="button" class="btn btn-info me-2" disabled><i class="bi bi-printer"></i> 受理審核清單列印</button>
+                        <button id="btn-prepare-approval" type="button" class="btn btn-success me-2"><i class="bi bi-send-check"></i> 審核</button>
+                        <button id="btn-cancel-case" type="button" class="btn btn-danger me-2"><i class="bi bi-trash"></i> 註銷本案</button>
+                        <button id="btn-return" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> 返回</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="p-3 mb-3 rounded demo-switcher">
+                        <div class="row align-items-center">
+                            <div class="col-auto"><strong class="text-danger"><i class="bi bi-tools"></i> 情境快速切換器 (Demo專用)</strong></div>
+                            <div class="col-auto"><label for="demoClaimTypeSwitcher" class="col-form-label">切換請領種類查看介面變化</label></div>
+                            <div class="col-auto"><select id="demoClaimTypeSwitcher" class="form-select size-auto"></select></div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-3 mb-3 border bg-white rounded">
+                         <div class="form-field-container">
+                            <label class="col-form-label">請領種類</label>
+                            <div class="field-content"><p id="display-claim-type" class="form-text-display mb-0"></p></div>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                         <li class="nav-item" role="presentation"><a class="nav-link" data-tab-id="tab-basic" href="op6_edit.html">基本資料</a></li>
+                         <li class="nav-item" role="presentation"><a class="nav-link" data-tab-id="tab-beneficiary" href="op6_edit2.html">受款人</a></li>
+                         <li class="nav-item" role="presentation"><a class="nav-link" data-tab-id="tab-approval-letter" href="op6_edit3.html">核定函</a></li>
+                         <li class="nav-item" role="presentation"><a class="nav-link" data-tab-id="tab-issuance-data" href="op6_edit4.html">請領核發資料</a></li>
+                         <li class="nav-item" role="presentation"><a class="nav-link" data-tab-id="tab-other-benefits" href="op6_edit5.html">請領其他給付資料</a></li>
+                         <li class="nav-item" role="presentation"><a class="nav-link" data-tab-id="tab-pension-changes" href="op6_edit6.html">勞退個人異動查詢</a></li>
+                         <li class="nav-item" role="presentation"><a class="nav-link" data-tab-id="tab-account-details" href="op6_edit7.html">個人專戶明細資料</a></li>
+                         <li class="nav-item" role="presentation"><a class="nav-link active" data-tab-id="tab-case-notes" href="op6_edit8.html">案件記事</a></li>
+                    </ul>
+
+                    <div class="tab-content border border-top-0 p-3" id="myTabContent">
+                        <div class="tab-pane fade show active" id="pane-case-notes" role="tabpanel">
+                             <fieldset class="p-3 mb-3 rounded">
+                                <div class="flex-form-container">
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">受理編號</label><div class="field-content"><p id="display-case-id" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工姓名</label><div class="field-content"><p id="laborerName" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工身分證字號</label><div class="field-content"><p id="laborerId" class="form-text-display"></p></div></div></div>
+
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工出生日期</label><div class="field-content"><p id="laborerDob" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item" id="laborerDodContainer"><div class="form-field-container"><label class="col-form-label">勞工死亡日期</label><div class="field-content"><p id="laborerDod" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">申請日期</label><div class="field-content"><p id="applicationDate" class="form-text-display"></p></div></div></div>
+
+                                    <div class="flex-form-item" data-claim-type-show="31,41,43,51,53"><div class="form-field-container"><label class="col-form-label">緊急</label><div class="field-content"><p id="isUrgent" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item" data-claim-type-show="51,52,53"><div class="form-field-container"><label class="col-form-label">法院扣押</label><div class="field-content"><p id="isSeized" class="form-text-display"></p></div></div></div>
+
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">版次</label><div class="field-content"><p id="display-version" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">申請次數</label><div class="field-content"><p id="display-apply-count" class="form-text-display"></p></div></div></div>
+                                </div>
+                            </fieldset>
+                            <div class="d-flex justify-content-end mb-2">
+                                <button type="button" class="btn btn-success" id="btn-add-note"><i class="bi bi-plus-circle"></i> 新增</button>
+                            </div>
+                            <div class="notes-table-container">
+                                <table class="table table-bordered table-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 5%;">序號</th>
+                                            <th style="width: 15%;"><span class="required">*</span>記事日期</th>
+                                            <th><span class="required">*</span>記事內容</th>
+                                            <th style="width: 20%;">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="case-notes-table-body">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="popover-content-template" class="d-none">
+        <div class="input-group input-group-sm mb-2">
+            <input type="text" class="form-control phrase-code-input" placeholder="輸入代碼...">
+            <button class="btn btn-outline-secondary phrase-confirm-btn" type="button">確定</button>
+        </div>
+        <div class="list-group phrase-list-group">
+            <a href="#" class="list-group-item list-group-item-action" data-code="1" data-phrase="電洽申請人未接聽">1. 電洽申請人未接聽</a>
+            <a href="#" class="list-group-item list-group-item-action" data-code="2" data-phrase="電洽申請人稱已寄出補正資料">2. 電洽申請人稱已寄出補正資料</a>
+            <a href="#" class="list-group-item list-group-item-action" data-code="3" data-phrase="告知逾補正期限，請重新申請，本案不予核發。">3. 告知逾補正期限，請重新申請，本案不予核發。</a>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- CONFIG & SETUP ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const caseIdFromUrl = urlParams.get('caseId') || '113-1-08-012345';
+        const claimTypeFromUrl = urlParams.get('claimType') || '53';
+        const storageKey = `op6_edit_state_${caseIdFromUrl}`;
+
+        const claimTypeMap = {
+            '31': '提前請領退休金(31)', '32': '提前請領月退休金(32)', '41': '一次退休金(41)',
+            '42': '月退休金(42)', '43': '續提退休金(43)', '46': '續提月退休金(46)',
+            '51': '死亡退休金(51)', '52': '月退死亡退休金(52)', '53': '死亡退休金(含月退)(53)'
+        };
+        
+        const demoSwitcher = document.getElementById('demoClaimTypeSwitcher');
+        const notesTableBody = document.getElementById('case-notes-table-body');
+        let currentPopover = null;
+        let isFormDirty = false;
+
+        // --- DEMO DATA & STATE MANAGEMENT ---
+        function createDemoState() {
+            return {
+                demoClaimType: claimTypeFromUrl || '53',
+                caseId: '113-1-08-012345-01',
+                laborerName: '王大明', laborerId: 'A123456789', laborerDob: '0600101',
+                laborerDeathDate: '1130601', applyDate: '1130615',
+                emergencyStatus: '專案處理', courtSeizureStatus: 'Y', version: '1', applyCount: '1',
+                isReAdjudicated: false,
+                caseNotes: [
+                    { date: '1130622', content: '系統收件，待分案。', isNew: false },
+                    { date: '1130625', content: '分案完成，文件初審中。', isNew: false },
+                    { date: '1130628', content: '發現戶籍謄本缺漏，已發函補正。', isNew: false }
+                ]
+            };
+        }
+
+        function mergeDefaults(state) {
+            const defaults = createDemoState();
+            const out = { ...defaults, ...(state || {}) };
+            // 確保必要欄位不為空
+            ['laborerName','laborerId','laborerDob','applyDate','version','applyCount','caseNotes','demoClaimType','caseId'].forEach(k => {
+                if (out[k] === undefined || out[k] === null || out[k] === '') out[k] = defaults[k];
+            });
+            return out;
+        }
+        
+        function saveState() {
+            const currentState = JSON.parse(sessionStorage.getItem(storageKey)) || createDemoState();
+            const notes = [];
+            notesTableBody.querySelectorAll('tr').forEach(row => {
+                const dateInput = row.querySelector('input[data-field="date"]');
+                const contentInput = row.querySelector('input[data-field="content"]');
+                const isNew = row.dataset.isNew === 'true';
+                if (dateInput && contentInput) {
+                    notes.push({ date: dateInput.value, content: contentInput.value, isNew: isNew });
+                }
+            });
+            currentState.caseNotes = notes;
+            currentState.demoClaimType = demoSwitcher.value;
+            sessionStorage.setItem(storageKey, JSON.stringify(currentState));
+        }
+
+        function loadState() {
+            let state = JSON.parse(sessionStorage.getItem(storageKey));
+            if (!state) {
+                state = createDemoState();
+                sessionStorage.setItem(storageKey, JSON.stringify(state));
+            }
+            // 以 URL 參數為準，覆蓋暫存類別/受理編號
+            if (claimTypeFromUrl && state.demoClaimType !== claimTypeFromUrl) {
+                state.demoClaimType = claimTypeFromUrl;
+            }
+            if (caseIdFromUrl) { state.caseId = caseIdFromUrl; }
+            sessionStorage.setItem(storageKey, JSON.stringify(state));
+            try { sessionStorage.setItem('op6_current_case_id', state.caseId || caseIdFromUrl || 'demo_case_01'); } catch(e) {}
+            state = mergeDefaults(state);
+
+            document.getElementById('display-claim-type').textContent = claimTypeMap[state.demoClaimType || claimTypeFromUrl] || '未知';
+            // 受理編號：若最後子欄為空，不顯示最後一個連字號
+            const formatCaseId = (val) => {
+                const s = (val || '').toString();
+                if (!s) return '';
+                const parts = s.split('-');
+                // 去除結尾的空白段
+                for (let i = parts.length - 1; i >= 0; i--) {
+                    if (parts[i] === '' || parts[i] === undefined || parts[i] === null) {
+                        parts.pop();
+                    } else {
+                        break;
+                    }
+                }
+                return parts.join('-');
+            };
+            document.getElementById('display-case-id').textContent = formatCaseId(state.caseId || caseIdFromUrl);
+            document.getElementById('laborerName').textContent = state.laborerName || '';
+            document.getElementById('laborerId').textContent = state.laborerId || '';
+            document.getElementById('laborerDob').textContent = state.laborerDob || '';
+            document.getElementById('laborerDod').textContent = state.laborerDeathDate || state.deathDate || state.laborerDod || ''; 
+            document.getElementById('applicationDate').textContent = state.applyDate || ''; 
+            document.getElementById('isUrgent').textContent = state.emergencyStatus || state.emergencyType || '';
+            document.getElementById('isSeized').textContent = state.courtSeizureStatus || state.courtSeizure || 'N';
+            document.getElementById('display-version').textContent = state.version || '';
+            document.getElementById('display-apply-count').textContent = state.applyCount || '';
+
+            // 根據是否重新編審的狀態，決定"受理審核清單列印"按鈕是否可按
+            // 列印啟用條件：已重新編審 + 無跨頁/本頁髒資料 + 無驗證錯誤
+            function updatePrintChecklistAvailability() {
+                const btn = document.getElementById('btn-print-checklist');
+                if (!btn) return;
+                let st = {};
+                try { st = JSON.parse(sessionStorage.getItem(storageKey)) || {}; } catch(e) {}
+                const crossTabDirty = (function(){ try { return sessionStorage.getItem('op6_edit_dirty_any') === 'true'; } catch(e) { return false; }})();
+                const hasErrors = !!document.querySelector('#pane-case-notes .error-message');
+                const enabled = !!(st.isReAdjudicated && !isFormDirty && !crossTabDirty && !hasErrors);
+                btn.disabled = !enabled;
+            }
+            updatePrintChecklistAvailability();
+
+            demoSwitcher.value = state.demoClaimType || claimTypeFromUrl;
+            
+            notesTableBody.innerHTML = '';
+            if (state.caseNotes) { state.caseNotes.forEach(addNoteRow); }
+            updateUI();
+        }
+        
+        function getSystemDateROC() {
+            const today = new Date();
+            const year = today.getFullYear() - 1911;
+            return `${year}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+        }
+        
+        const renumberCaseNotes = () => {
+            notesTableBody.querySelectorAll('tr').forEach((row, index) => {
+                row.querySelector('td:first-child').textContent = index + 1;
+            });
+        };
+        
+        const addNoteRow = (noteData) => {
+            const date = noteData.date || getSystemDateROC();
+            const content = noteData.content || '';
+            const isNew = noteData.isNew || false;
+            
+            let buttonsHtml = '<button type="button" class="btn btn-danger btn-sm btn-delete-note">刪除</button>';
+            if (isNew) {
+                buttonsHtml = '<button type="button" class="btn btn-info btn-sm me-1 btn-common-phrase">常用片語</button>' + buttonsHtml;
+            }
+            
+            const newRow = document.createElement('tr');
+            newRow.dataset.isNew = isNew;
+            newRow.innerHTML = `
+                <td></td>
+                <td><input type="text" class="form-control size-auto" data-field="date" value="${date}" maxlength="7" size="7" required></td>
+                <td><input type="text" class="form-control" data-field="content" value="${content}" maxlength="50" size="50" required></td>
+                <td>${buttonsHtml}</td>
+            `;
+            notesTableBody.appendChild(newRow);
+            renumberCaseNotes();
+        };
+
+        function updateUI() {
+            const savedState = JSON.parse(sessionStorage.getItem(storageKey)) || {};
+            const currentClaimType = savedState.demoClaimType || demoSwitcher.value;
+            
+            document.getElementById('display-claim-type').textContent = claimTypeMap[currentClaimType] || '未知';
+            
+            document.querySelectorAll('#myTab .nav-link').forEach(tabLink => {
+                const baseHref = tabLink.getAttribute('href').split('?')[0];
+                if (baseHref === '#' || !baseHref) return;
+                const params = new URLSearchParams();
+                params.set('claimType', currentClaimType);
+                params.set('caseId', caseIdFromUrl);
+                tabLink.setAttribute('href', `${baseHref}?${params.toString()}`);
+            });
+
+            // 顯示條件：依請領種類控制欄位顯示（自動補位：隱藏整個 flex item）
+            document.querySelectorAll('#pane-case-notes .flex-form-item[data-claim-type-show]').forEach(fc => {
+                const allow = (fc.getAttribute('data-claim-type-show') || '').split(',');
+                fc.style.display = allow.includes(currentClaimType) ? '' : 'none';
+            });
+            // 勞工死亡日期：僅於 51/52/53 且有值時顯示
+            const dodContainer = document.getElementById('laborerDodContainer');
+            const dodVal = (document.getElementById('laborerDod')?.textContent || '').trim();
+            const isDeathType = ['51','52','53'].includes(currentClaimType);
+            if (dodContainer) {
+                dodContainer.style.display = (isDeathType && !!dodVal) ? '' : 'none';
+            }
+        }
+
+        function clearAllErrors() {
+            document.querySelectorAll('.error-message').forEach(el => el.remove());
+        }
+
+        function showError(element, message) {
+            clearAllErrors();
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            element.closest('td').appendChild(errorDiv);
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function validatePage() {
+            let isValid = true;
+            let firstErrorElement = null;
+
+            const inputs = notesTableBody.querySelectorAll('input[required]');
+            for (const input of inputs) {
+                if (!input.value.trim()) {
+                    isValid = false;
+                    firstErrorElement = input;
+                    showError(input, '此為必要欄位，請勿空白。');
+                    break; 
+                }
+            }
+            return isValid;
+        }
+
+        document.getElementById('btn-add-note').addEventListener('click', () => {
+            addNoteRow({ isNew: true });
+            saveState();
+            isFormDirty = true;
+            try { sessionStorage.setItem('op6_edit_dirty_any', 'true'); } catch(e) {}
+        });
+
+        // 返回按鈕：回到查詢頁（帶回目前請領種類與受理編號）
+        document.getElementById('btn-return').addEventListener('click', () => {
+            try {
+                const state = JSON.parse(sessionStorage.getItem(storageKey)) || {};
+                const claimType = (state.demoClaimType) || demoSwitcher.value || '';
+                const caseId = state.caseId || caseIdFromUrl || '';
+                const params = new URLSearchParams();
+                if (claimType) params.set('claimType', claimType);
+                if (caseId) params.set('caseId', caseId);
+                const suffix = params.toString();
+                window.location.href = suffix ? `op6.html?${suffix}` : 'op6.html';
+            } catch (e) {
+                window.location.href = 'op6.html';
+            }
+        });
+
+        notesTableBody.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.classList.contains('btn-delete-note')) {
+                if (confirm('是否確定要刪除此筆記事？')) {
+                    target.closest('tr').remove();
+                    renumberCaseNotes();
+                    saveState();
+                    isFormDirty = true;
+                    try { sessionStorage.setItem('op6_edit_dirty_any', 'true'); } catch(e) {}
+                }
+            } else if (target.classList.contains('btn-common-phrase')) {
+                if (currentPopover) { currentPopover.dispose(); }
+                
+                const targetInput = target.closest('tr').querySelector('input[data-field="content"]');
+                const popover = new bootstrap.Popover(target, {
+                    content: document.getElementById('popover-content-template').innerHTML,
+                    html: true, placement: 'left', title: '選擇常用片語', sanitize: false
+                });
+                popover.show();
+                currentPopover = popover;
+
+                target.addEventListener('shown.bs.popover', () => {
+                    const popoverBody = document.getElementById(target.getAttribute('aria-describedby'))?.querySelector('.popover-body');
+                    if (!popoverBody) return;
+                    const codeInput = popoverBody.querySelector('.phrase-code-input');
+                    const confirmBtn = popoverBody.querySelector('.phrase-confirm-btn');
+                    const setPhrase = (phrase) => {
+                        targetInput.value = phrase;
+                        if (currentPopover) { currentPopover.dispose(); currentPopover = null; }
+                        saveState();
+                        isFormDirty = true;
+                        try { sessionStorage.setItem('op6_edit_dirty_any', 'true'); } catch(e) {}
+                    };
+                    popoverBody.querySelector('.phrase-list-group').addEventListener('click', (event) => {
+                        event.preventDefault();
+                        const link = event.target.closest('.list-group-item-action');
+                        if (link) { setPhrase(link.dataset.phrase); }
+                    });
+                    const applyCode = () => {
+                        const phraseLink = popoverBody.querySelector(`.phrase-list-group a[data-code="${codeInput.value}"]`);
+                        if (phraseLink) { setPhrase(phraseLink.dataset.phrase); } else if (codeInput.value) { alert('無效的代碼'); }
+                    };
+                    confirmBtn.addEventListener('click', applyCode);
+                    codeInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); applyCode(); } });
+                    codeInput.focus();
+                }, { once: true });
+            }
+        });
+        
+        notesTableBody.addEventListener('input', () => { 
+            saveState(); 
+            isFormDirty = true; 
+            try { sessionStorage.setItem('op6_edit_dirty_any', 'true'); } catch(e) {}
+            try { if (typeof updatePrintChecklistAvailability === 'function') updatePrintChecklistAvailability(); } catch(e) {}
+        });
+        demoSwitcher.addEventListener('change', () => {
+            const state = JSON.parse(sessionStorage.getItem(storageKey)) || createDemoState();
+            state.demoClaimType = demoSwitcher.value;
+            sessionStorage.setItem(storageKey, JSON.stringify(state));
+            updateUI();
+        });
+        
+        // --- [MODIFIED] 確認按鈕新規則 ---
+        document.getElementById('btn-confirm').addEventListener('click', () => {
+            clearAllErrors();
+            // 1. 觸發欄位檢核
+            if (validatePage()) {
+                // 1.1 民法繼承案件檢核（與基本資料頁一致）：勾選且無繼承人時阻擋並導至受款人頁
+                try {
+                    let st = {};
+                    try { st = JSON.parse(sessionStorage.getItem(storageKey)) || {}; } catch(e) {}
+                    const ct = st.demoClaimType || claimTypeFromUrl || '';
+                    const needHeir = ['31','41','43','51','52','53'].includes(ct);
+                    const inheritChecked = !!st.civilLawInheritance;
+                    if (needHeir && inheritChecked) {
+                        const cid = st.caseId || caseIdFromUrl || '';
+                        const countKey = cid ? `op6_heir_count_${cid}` : '';
+                        let heirCount = 0;
+                        try { if (countKey) heirCount = parseInt(sessionStorage.getItem(countKey) || '0', 10) || 0; } catch(e) {}
+                        if (heirCount <= 0) {
+                            alert('已勾選「民法繼承案件」，需先於「受款人」頁籤新增至少 1 位繼承人。');
+                            const params = new URLSearchParams();
+                            if (ct) params.set('claimType', ct);
+                            if (cid) params.set('caseId', cid);
+                            window.location.href = `op6_edit2.html?${params.toString()}`;
+                            return;
+                        }
+                    }
+                } catch(e) {}
+                // 2. 檢核通過，跳出確認訊息
+                if (confirm('是否要完成重新編審？')) {
+                    // 3. 若選擇 "是"
+                    let state = JSON.parse(sessionStorage.getItem(storageKey)) || createDemoState();
+                    
+                    // 模擬重新編審: 版次+1, 存檔
+                    state.version = (parseInt(state.version, 10) || 0) + 1;
+                    state.isReAdjudicated = true; // 設定標記
+                    
+                    // 將目前頁面上的記事資料寫入 state
+                    const notes = [];
+                    notesTableBody.querySelectorAll('tr').forEach(row => {
+                        const dateInput = row.querySelector('input[data-field="date"]');
+                        const contentInput = row.querySelector('input[data-field="content"]');
+                        const isNew = row.dataset.isNew === 'true';
+                        if (dateInput && contentInput) {
+                            notes.push({ date: dateInput.value, content: contentInput.value, isNew: isNew });
+                        }
+                    });
+                    state.caseNotes = notes;
+                    
+                    sessionStorage.setItem(storageKey, JSON.stringify(state));
+                    isFormDirty = false;
+                    try { sessionStorage.setItem('op6_edit_dirty_any', 'false'); } catch(e) {}
+                    alert('已重新編審完成!');
+                    location.reload(); // 刷新頁面
+                }
+                // 4. 若選擇 "否"，則不做任何事，回到原頁面
+            }
+        });
+
+        // --- [NEW] 受理審核清單列印按鈕規則 ---
+        document.getElementById('btn-print-checklist').addEventListener('click', () => {
+            alert('核定清單列印');
+        });
+
+        // 審核/註銷 提示 + 版次/未儲存檢核
+        const btnPrepare = document.getElementById('btn-prepare-approval');
+        if (btnPrepare) {
+            btnPrepare.addEventListener('click', () => {
+                try {
+                    const st = JSON.parse(sessionStorage.getItem(storageKey)) || {};
+                    const hasConfirmed = !!st.isReAdjudicated; // 代表已按下「確認」且版次+1
+                    if (!hasConfirmed || isFormDirty) {
+                        alert('版本不一致，無法進行初核核定。請先按下「確認」完成重新編審。');
+                        return;
+                    }
+                } catch(e) {}
+                if (confirm('是否確認進行審核？')) { alert('已送出審核。'); }
+            });
+        }
+        const btnCancel = document.getElementById('btn-cancel-case');
+        if (btnCancel) {
+            btnCancel.addEventListener('click', () => {
+                if (confirm('即將註銷本受理案件，是否確認註銷？')) {
+                    alert('案件已標記為註銷。');
+                }
+            });
+        }
+
+        // Enter 導覽（事件委派）：在案件記事頁籤以 Enter 跳到下一個可輸入元件（不提交、不觸發即時檢核）
+        (function setupEnterNavigation(){
+            const scope = document.getElementById('pane-case-notes');
+            if (!scope) return;
+            const getFocusables = () => Array.from(scope.querySelectorAll('input, select'))
+                .filter(el => !el.disabled && el.offsetParent !== null);
+            scope.addEventListener('keydown', function(e){
+                const target = e.target;
+                if (e.key === 'Enter' && (target instanceof HTMLElement) && (target.matches('input, select'))) {
+                    e.preventDefault();
+                    const list = getFocusables();
+                    const idx = list.indexOf(target);
+                    if (idx > -1 && idx < list.length - 1) {
+                        list[idx + 1].focus();
+                    }
+                }
+            });
+        })();
+
+        for (const key in claimTypeMap) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = claimTypeMap[key];
+            demoSwitcher.appendChild(option);
+        }
+        loadState();
+        window.addEventListener('focus', loadState);
+    });
+    </script>
+</body>
+</html>

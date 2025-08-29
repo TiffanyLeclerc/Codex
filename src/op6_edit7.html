@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更正作業 - 個人專戶明細資料 (op6_edit7.html)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+      body { background-color: #fff; }
+      .card-header { display: flex; justify-content: space-between; align-items: center; }
+      .btn-toolbar { justify-content: flex-end; }
+      .col-form-label .required { color: red; font-weight: bold; margin-right: 2px; }
+      .form-text-display { padding-top: 0; padding-bottom: 0; margin-bottom: 0; font-size: 1rem; line-height: 1.4; color: #212529; font-weight: bold; min-height: 0; display: inline; }
+      .col-form-label:not(.no-colon)::after { content: '：'; }
+      .form-select.size-auto { width: auto; }
+      .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
+      .nav-tabs .nav-link { white-space: nowrap; }
+      .table-responsive { margin-top: 1rem; }
+      .table th, .table td { vertical-align: middle; text-align: center; }
+      
+      /* 增加頁面底部留白，避免內容過於擁擠 */
+      .card-body { padding-bottom: 2.5rem; }
+      
+      .form-field-container { display: flex; align-items: baseline; width: 100%; gap: 0; }
+      .form-field-container .col-form-label { flex-shrink: 0; text-align: left; padding-right: 0; white-space: nowrap; min-width: auto; }
+      .form-field-container .field-content { flex-grow: 1; }
+
+      /* 三欄自動補位（與 op6_edit8 一致） */
+      .flex-form-container { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 16px; row-gap: 8px; margin: 0; }
+      .flex-form-item { box-sizing: border-box; padding: 0; margin: 0; }
+      
+      .issuance-section-title { font-weight: bold; margin-bottom: 0.5rem; }
+      .pagination-controls { padding-top: 1rem; }
+      .demo-switcher { background-color: #fff3cd; border: 1px solid #ffeeba; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div id="modification-page">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">更正作業</h2>
+                    <div id="common-buttons" class="btn-toolbar" role="toolbar">
+                        <button id="btn-confirm" type="button" class="btn btn-primary me-2"><i class="bi bi-check-circle"></i> 確認</button>
+                        <button id="btn-print-checklist" type="button" class="btn btn-info me-2" disabled><i class="bi bi-printer"></i> 受理審核清單列印</button>
+                        <button id="btn-prepare-approval" type="button" class="btn btn-success me-2"><i class="bi bi-send-check"></i> 審核</button>
+                        <button id="btn-split-amount" type="button" class="btn btn-warning me-2"><i class="bi bi-distribute-vertical"></i> 金額分割</button>
+                        <button id="btn-print-pdf" type="button" class="btn btn-light border me-2"><i class="bi bi-file-earmark-pdf"></i> 頁面(或pdf)列印</button>
+                        <button id="btn-return" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> 返回</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="p-3 mb-3 rounded demo-switcher">
+                        <div class="row align-items-center">
+                            <div class="col-auto"><strong class="text-danger"><i class="bi bi-tools"></i> 情境快速切換器 (Demo專用)</strong></div>
+                            <div class="col-auto"><label for="demoClaimTypeSwitcher" class="col-form-label">切換請領種類查看介面變化</label></div>
+                            <div class="col-auto"><select id="demoClaimTypeSwitcher" class="form-select size-auto"></select></div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-3 mb-3 border bg-white rounded">
+                         <div class="form-field-container">
+                            <label class="col-form-label">請領種類</label>
+                            <div class="field-content"><p id="display-claim-type" class="form-text-display mb-0"></p></div>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-basic" href="op6_edit.html">基本資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-beneficiary" href="op6_edit2.html">受款人</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-approval-letter" href="op6_edit3.html">核定函</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-issuance-data" href="op6_edit4.html">請領核發資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-other-benefits" href="op6_edit5.html">請領其他給付資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-pension-changes" href="op6_edit6.html">勞退個人異動查詢</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link active" id="tab-account-details" href="op6_edit7.html">個人專戶明細資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-case-notes" href="op6_edit8.html">案件記事</a></li>
+                    </ul>
+
+                    <div class="tab-content border border-top-0 p-3" id="myTabContent">
+                        <div class="tab-pane fade show active" id="pane-account-details">
+                            
+                            <fieldset class="p-3 mb-3 rounded">
+                                <div class="flex-form-container">
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">受理編號</label><div class="field-content"><p id="display-case-id" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工姓名</label><div class="field-content"><p id="laborerName" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工身分證字號</label><div class="field-content"><p id="laborerId" class="form-text-display"></p></div></div></div>
+
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞工出生日期</label><div class="field-content"><p id="laborerDob" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">版次</label><div class="field-content"><p id="version" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"></div>
+
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">已繳納金額</label><div class="field-content"><p id="total-paid" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">收益累計</label><div class="field-content"><p id="total-earnings" class="form-text-display"></p></div></div></div>
+                                    <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">可核發金額</label><div class="field-content"><p id="total-issuable" class="form-text-display"></p></div></div></div>
+                                </div>
+                            </fieldset>
+
+                            <div id="summary-view">
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm" style="font-size: 0.9rem;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>計費年月</th>
+                                                <th>摘要說明</th>
+                                                <th>資料時段</th>
+                                                <th>繳納單位編號</th>
+                                                <th>應計退休金</th>
+                                                <th>金額</th>
+                                                <th>繳納日期</th>
+                                                <th>處理日期</th>
+                                                <th>收益分配年度</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="account-details-body-summary"></tbody>
+                                    </table>
+                                </div>
+                                <div id="pagination-container-summary" class="d-flex justify-content-center pagination-controls"></div>
+                            </div>
+
+                            <div id="detail-view" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mt-4">
+                                     <h5 id="detail-title" class="issuance-section-title"></h5>
+                                     <button id="btn-return-to-list" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> 返回清單</button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm" style="font-size: 0.9rem;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>計費年月</th>
+                                                <th>摘要說明</th>
+                                                <th>資料時段</th>
+                                                <th>繳納單位編號</th>
+                                                <th>應計退休金</th>
+                                                <th>金額</th>
+                                                <th>繳納日期</th>
+                                                <th>處理日期</th>
+                                                <th>收益分配年度</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="account-details-body-detail"></tbody>
+                                    </table>
+                                </div>
+                                <div id="pagination-container-detail" class="d-flex justify-content-center pagination-controls"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        let claimTypeFromUrl = urlParams.get('claimType');
+        let caseIdFromUrl = urlParams.get('caseId') || (function(){ try { return sessionStorage.getItem('op6_current_case_id'); } catch(e){ return null; } })();
+        const storageKey = `op6_edit_state_${caseIdFromUrl || 'demo_case_01'}`;
+
+        const claimTypeMap = { '31': '提前請領退休金(31)', '32': '提前請領月退休金(32)', '41': '一次退休金(41)', '42': '月退休金(42)', '43': '續提退休金(43)', '46': '續提月退休金(46)', '51': '死亡退休金(51)', '52': '月退死亡退休金(52)', '53': '死亡退休金(含月退)(53)' };
+        
+        const demoSwitcher = document.getElementById('demoClaimTypeSwitcher');
+        const summaryView = document.getElementById('summary-view');
+        const detailView = document.getElementById('detail-view');
+        
+        let state = {};
+        let currentSummaryPage = 1;
+        let currentDetailPage = 1;
+        const rowsPerPage = 20;
+
+        const mockData = [];
+        const generateYearData = (year) => {
+            const rocYear = (year - 1911).toString();
+            for (let i = 1; i <= 12; i++) {
+                const month = String(i).padStart(2, '0');
+                mockData.push({ "計費年月": `${rocYear}${month}`, "摘要說明": "繳納雇提", "資料時段": `${rocYear}${month}`, "繳納單位編號": "1135383", "應計退休金": 25200, "金額": 1512, "繳納日期": `${rocYear}${String(i+1).padStart(2,'0')}25`, "處理日期": `${rocYear}${String(i+2).padStart(2,'0')}01`, "收益分配年度": "" });
+            }
+            for (let i = 1; i <= 10; i++) {
+                const month = String(i).padStart(2, '0');
+                mockData.push({ "計費年月": `${rocYear}${month}`, "摘要說明": "繳納個提", "資料時段": `${rocYear}${month}`, "繳納單位編號": "1135383", "應計退休金": 25200, "金額": 1512, "繳納日期": `${rocYear}${String(i+1).padStart(2,'0')}25`, "處理日期": `${rocYear}${String(i+2).padStart(2,'0')}01`, "收益分配年度": "" });
+            }
+            mockData.push({ "計費年月": "", "摘要說明": "雇提收益", "資料時段": `${rocYear}12`, "繳納單位編號": "", "應計退休金": 0, "金額": Math.floor(Math.random() * 50000) + 5000, "繳納日期": "", "處理日期": `${parseInt(rocYear)+1}0301`, "收益分配年度": rocYear });
+            mockData.push({ "計費年月": "", "摘要說明": "個提收益", "資料時段": `${rocYear}12`, "繳納單位編號": "", "應計退休金": 0, "金額": Math.floor(Math.random() * 40000) + 4000, "繳納日期": "", "處理日期": `${parseInt(rocYear)+1}0301`, "收益分配年度": rocYear });
+        };
+        generateYearData(2018); generateYearData(2019); generateYearData(2020); generateYearData(2021); generateYearData(2022); generateYearData(2023);
+        
+        for (const key in claimTypeMap) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = claimTypeMap[key];
+            demoSwitcher.appendChild(option);
+        }
+
+        function defaultStateForClaim(claimType, caseId) {
+            return { demoClaimType: claimType || '53', caseId: caseId || '', laborerName: '王大明', laborerId: 'A123456789', laborerDob: '0600101', version: '1' };
+        }
+
+        function loadState() {
+            const savedStateJSON = sessionStorage.getItem(storageKey);
+             if (!savedStateJSON) {
+                state = defaultStateForClaim(claimTypeFromUrl || '53', caseIdFromUrl || '');
+            } else { 
+                let loaded = JSON.parse(savedStateJSON);
+                // 以 URL 參數為準，覆蓋暫存類別/受理編號
+                if (claimTypeFromUrl && loaded.demoClaimType !== claimTypeFromUrl) { loaded.demoClaimType = claimTypeFromUrl; }
+                if (caseIdFromUrl) { loaded.caseId = caseIdFromUrl; }
+                state = { ...defaultStateForClaim(loaded.demoClaimType, loaded.caseId), ...loaded };
+            }
+            if (!state.caseId && caseIdFromUrl) { state.caseId = caseIdFromUrl; }
+            try { sessionStorage.setItem(storageKey, JSON.stringify(state)); } catch(e) {}
+            try { sessionStorage.setItem('op6_current_case_id', state.caseId || caseIdFromUrl || 'demo_case_01'); } catch(e) {}
+        }
+
+        function saveState() {
+            state.demoClaimType = demoSwitcher.value; 
+            sessionStorage.setItem(storageKey, JSON.stringify(state));
+        }
+
+        function formatCaseId(val) {
+            const s = (val || '').toString();
+            if (!s) return '';
+            const parts = s.split('-');
+            for (let i = parts.length - 1; i >= 0; i--) {
+                if (parts[i] === '' || parts[i] === undefined || parts[i] === null) { parts.pop(); } else { break; }
+            }
+            return parts.join('-');
+        }
+
+        function updateCommonUI() {
+            // 從 sessionStorage 讀取資料來更新 UI
+            loadState(); 
+
+            const currentClaimType = state.demoClaimType || claimTypeFromUrl || '53';
+            demoSwitcher.value = currentClaimType;
+            document.getElementById('display-claim-type').textContent = claimTypeMap[currentClaimType] || '未知';
+            
+            // 使用 state 中的資料來填入欄位
+            document.getElementById('display-case-id').textContent = formatCaseId(state.caseId || caseIdFromUrl || '');
+            document.getElementById('version').textContent = state.version || '1';
+            document.getElementById('laborerName').textContent = state.laborerName || '王大明';
+            document.getElementById('laborerId').textContent = state.laborerId || 'A123456789';
+            document.getElementById('laborerDob').textContent = state.laborerDob || '0600101';
+            
+            updateButtonsForTab();
+            updateTabLinks(currentClaimType);
+        }
+        
+        function getYearFromItem(item) {
+            if (item["收益分配年度"]) return item["收益分配年度"];
+            if (item["計費年月"]) return item["計費年月"].substring(0, 3);
+            return null;
+        }
+
+        function router() {
+            const params = new URLSearchParams(window.location.search);
+            const yearToShow = params.get('year');
+            if(yearToShow) {
+                summaryView.style.display = 'none';
+                detailView.style.display = 'block';
+                renderDetailView(yearToShow);
+            } else {
+                summaryView.style.display = 'block';
+                detailView.style.display = 'none';
+                renderSummaryView();
+            }
+        }
+
+        function renderSummaryView() {
+            const tableBody = document.getElementById('account-details-body-summary');
+            
+            // [MODIFIED] Set summary values based on the latest image.
+            document.getElementById('total-paid').textContent = '199,584';
+            document.getElementById('total-earnings').textContent = '288,421';
+            document.getElementById('total-issuable').textContent = '488,005';
+
+            const groupedData = {};
+            mockData.forEach(item => {
+                const year = getYearFromItem(item);
+                if (!year) return;
+                if (!groupedData[year]) { groupedData[year] = []; }
+                groupedData[year].push(item);
+            });
+
+            const sortedYears = Object.keys(groupedData).sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+            const rowsToShow = [];
+            sortedYears.forEach(year => {
+                const yearData = groupedData[year];
+                const summary = yearData.reduce((acc, item) => { acc.應計退休金 += item.應計退休金 || 0; acc.金額 += item.金額 || 0; return acc; }, { 應計退休金: 0, 金額: 0 });
+                const summaryRow = document.createElement('tr');
+                summaryRow.innerHTML = `
+                    <td></td>
+                    <td><button class="btn btn-sm btn-primary btn-show-detail" data-year="${year}">明細查詢</button></td>
+                    <td>${year}_</td>
+                    <td></td>
+                    <td class="text-end">${summary.應計退休金.toLocaleString()}</td>
+                    <td class="text-end">${summary.金額.toLocaleString()}</td>
+                    <td></td>
+                    <td></td>
+                    <td>${year}</td>`;
+                rowsToShow.push(summaryRow);
+            });
+            setupPagination(rowsToShow, 'summary');
+            displayPage(1, rowsToShow, 'summary');
+        }
+
+        function renderDetailView(year) {
+            document.getElementById('detail-title').textContent = `${year}年度 明細資料`;
+            const yearDetails = mockData.filter(item => getYearFromItem(item) === year).sort((a, b) => (a["計費年月"] || a["資料時段"]).localeCompare(b["計費年月"] || b["資料時段"]));
+            setupPagination(yearDetails, 'detail');
+            displayPage(1, yearDetails, 'detail');
+        }
+        
+        function createDetailRow(item) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${item["計費年月"]}</td><td>${item["摘要說明"]}</td><td>${item["資料時段"]}</td><td>${item["繳納單位編號"]}</td><td class="text-end">${(item["應計退休金"] || 0) > 0 ? item["應計退休金"].toLocaleString() : ''}</td><td class="text-end">${item["金額"].toLocaleString()}</td><td>${item["繳納日期"]}</td><td>${item["處理日期"]}</td><td>${item["收益分配年度"]}</td>`;
+            return row;
+        }
+
+        function setupPagination(rows, viewType) {
+            const containerId = `pagination-container-${viewType}`;
+            const paginationContainer = document.getElementById(containerId);
+            paginationContainer.innerHTML = '';
+            const pageCount = Math.ceil(rows.length / rowsPerPage);
+            if (pageCount <= 1) return;
+            const displayFn = viewType === 'summary' ? (page) => displayPage(page, rows, 'summary') : (page) => displayPage(page, rows, 'detail');
+            
+            const prevButton = document.createElement('button');
+            prevButton.innerHTML = '&laquo; 上一頁';
+            prevButton.className = 'btn btn-secondary me-2';
+            prevButton.addEventListener('click', () => {
+                const currentPage = viewType === 'summary' ? currentSummaryPage : currentDetailPage;
+                if (currentPage > 1) { displayFn(currentPage - 1); }
+            });
+            paginationContainer.appendChild(prevButton);
+
+            const pageInfo = document.createElement('span');
+            pageInfo.className = 'align-self-center page-info';
+            paginationContainer.appendChild(pageInfo);
+            
+            const nextButton = document.createElement('button');
+            nextButton.innerHTML = '下一頁 &raquo;';
+            nextButton.className = 'btn btn-secondary ms-2';
+            nextButton.addEventListener('click', () => {
+                const currentPage = viewType === 'summary' ? currentSummaryPage : currentDetailPage;
+                if (currentPage < pageCount) { displayFn(currentPage + 1); }
+            });
+            paginationContainer.appendChild(nextButton);
+        }
+
+        function displayPage(page, rows, viewType) {
+            if (viewType === 'summary') { currentSummaryPage = page; } else { currentDetailPage = page; }
+            
+            const tableBodyId = `account-details-body-${viewType}`;
+            const tableBody = document.getElementById(tableBodyId);
+            tableBody.innerHTML = '';
+            
+            const startIndex = (page - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            rows.slice(startIndex, endIndex).forEach(row => {
+                 tableBody.appendChild(viewType === 'summary' ? row : createDetailRow(row));
+            });
+            
+            const paginationContainer = document.getElementById(`pagination-container-${viewType}`);
+            const pageInfo = paginationContainer.querySelector('.page-info');
+            const pageCount = Math.ceil(rows.length / rowsPerPage);
+            if(pageInfo) pageInfo.textContent = `第 ${page} / ${pageCount} 頁`;
+            
+            const prevButton = paginationContainer.querySelector('button:first-child');
+            const nextButton = paginationContainer.querySelector('button:last-child');
+            if (prevButton) prevButton.disabled = page === 1;
+            if (nextButton) nextButton.disabled = page === pageCount;
+        }
+        
+        function updateButtonsForTab() {
+            const activeTabId = document.querySelector('#myTab .nav-link.active')?.id;
+            const isEditableTab = ['tab-basic', 'tab-beneficiary', 'tab-case-notes'].includes(activeTabId);
+            document.getElementById('btn-confirm').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-print-checklist').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-prepare-approval').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-print-pdf').style.display = !isEditableTab ? '' : 'none';
+            document.getElementById('btn-split-amount').style.display = 'none';
+        }
+        
+        function updateTabLinks(currentClaimType) {
+            const currentCaseId = state.caseId || caseIdFromUrl || '';
+            document.querySelectorAll('#myTab .nav-link').forEach(tabLink => {
+                const baseHref = tabLink.getAttribute('href').split('?')[0];
+                if (baseHref === '#' || !baseHref) return;
+                const params = new URLSearchParams();
+                if (currentClaimType) params.set('claimType', currentClaimType);
+                if (currentCaseId) params.set('caseId', currentCaseId);
+                tabLink.setAttribute('href', `${baseHref}?${params.toString()}`);
+            });
+        }
+
+        demoSwitcher.addEventListener('change', function() { saveState(); updateCommonUI(); router(); });
+        document.getElementById('btn-return').addEventListener('click', () => {
+            try {
+                const saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+                const claimType = saved.demoClaimType || demoSwitcher.value || '';
+                const caseId = caseIdFromUrl || saved.caseId || '';
+                const params = new URLSearchParams();
+                if (claimType) params.set('claimType', claimType);
+                if (caseId) params.set('caseId', caseId);
+                const suffix = params.toString();
+                window.location.href = suffix ? `op6.html?${suffix}` : 'op6.html';
+            } catch (e) {
+                window.location.href = 'op6.html';
+            }
+        });
+        document.getElementById('btn-print-pdf').addEventListener('click', () => window.print());
+
+        // 審核 提示（含跨頁籤 dirty 與是否已確認檢核）
+        const btnPrepare = document.getElementById('btn-prepare-approval');
+        if (btnPrepare) {
+            btnPrepare.addEventListener('click', () => {
+                try {
+                    const crossTabDirty = sessionStorage.getItem('op6_edit_dirty_any') === 'true';
+                    const saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+                    const hasConfirmed = !!saved.isReAdjudicated;
+                    if (crossTabDirty || !hasConfirmed) {
+                        alert('版本不一致，無法進行初核核定。請先按下「確認」完成重新編審。');
+                        return;
+                    }
+                } catch(e) {}
+                if (confirm('是否確認進行審核？')) {
+                    alert('已送出審核。');
+                }
+            });
+        }
+
+        summaryView.addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains('btn-show-detail')) {
+                const year = e.target.dataset.year;
+                const url = new URL(window.location);
+                url.searchParams.set('year', year);
+                history.pushState({ year: year }, '', url);
+                router();
+            }
+        });
+
+        document.getElementById('btn-return-to-list').addEventListener('click', function() {
+            const url = new URL(window.location);
+            url.searchParams.delete('year');
+            history.pushState({}, '', url);
+            router();
+        });
+
+        window.addEventListener('popstate', router);
+        // 當視窗重新獲得焦點時，也更新一次資料，確保跨頁籤的資料同步
+        window.addEventListener('focus', function() { 
+            updateCommonUI(); 
+            router(); 
+        });
+
+        // 頁面首次載入時執行
+        updateCommonUI();
+        router();
+        
+    });
+    </script>
+</body>
+</html>

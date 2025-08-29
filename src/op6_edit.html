@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更正作業 - 基本資料 (op6_edit.html)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+      body { background-color: #fff; }
+      .card-header { display: flex; justify-content: space-between; align-items: center; }
+      .btn-toolbar { justify-content: flex-end; }
+      .col-form-label .required { color: red; font-weight: bold; margin-right: 2px; }
+      .form-text-display { padding-top: 0; padding-bottom: 0; margin-bottom: 0; font-size: 1rem; line-height: 1.4; color: #212529; font-weight: bold; min-height: 0; display: inline; }
+      .col-form-label:not(.no-colon)::after { content: '：'; }
+      .form-control.size-auto, .form-select.size-auto, .input-group.size-auto { width: auto; display: inline-flex; }
+      .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
+      .nav-tabs .nav-link { white-space: nowrap; }
+      .demo-switcher { background-color: #fff3cd; border: 1px solid #ffeeba; }
+      .form-check-label { margin-left: 0.5rem; }
+
+      .form-field-container { display: flex; align-items: baseline; width: 100%; gap: 0; }
+      .form-field-container .col-form-label { flex-shrink: 0; text-align: left; padding-right: 0; white-space: nowrap; min-width: auto; }
+      .form-field-container .field-content { flex-grow: 1; }
+
+      .tab-content { padding: 2.5rem !important; }
+      .card-body { padding-bottom: 2.5rem; }
+      
+      .flex-form-container { display: flex; flex-wrap: wrap; margin-left: -1.5rem; margin-right: -1.5rem; align-items: baseline; }
+      .flex-form-container + .flex-form-container { margin-top: 2rem; }
+      .flex-form-item { flex: 0 0 33.3333%; max-width: 33.3333%; padding-left: 1.5rem; padding-right: 1.5rem; margin-bottom: 1.25rem; box-sizing: border-box; }
+
+      /* Header block aligns with op6_edit8 (tighter grid, smaller row gap) */
+      .header-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 16px; row-gap: 8px; margin: 0; }
+      .header-grid .flex-form-item { padding: 0; margin: 0; max-width: none; flex: initial; }
+      
+      .flex-form-item-full {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+      
+      input:disabled {
+        background-color: #e9ecef;
+        opacity: 0.7;
+      }
+      
+      .disability-category-container {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 2px;
+        padding-top: 8px;
+      }
+      .disability-input-group {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 5px;
+      }
+      .disability-input-2, .disability-input-1 {
+        border: none;
+        border-bottom: 1px solid #555;
+        text-align: center;
+        padding: 0;
+        margin: 0;
+        background-color: transparent;
+        font-family: monospace;
+      }
+      .disability-input-2 {
+        width: 2em;
+      }
+      .disability-input-1 {
+        width: 1.2em;
+      }
+      .disability-separator {
+        padding: 0 2px;
+      }
+
+      /* 輕量化紅字錯誤訊息（僅於按下「確認」時一次性檢核顯示） */
+      .error-message { color: red; font-size: 0.875em; margin-top: 0.25rem; }
+
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div id="modification-page">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">更正作業</h2>
+                    <div id="common-buttons" class="btn-toolbar" role="toolbar">
+                        <button id="btn-confirm" type="button" class="btn btn-primary me-2"><i class="bi bi-check-circle"></i> 確認</button>
+                        <button id="btn-print-checklist" type="button" class="btn btn-info me-2" disabled><i class="bi bi-printer"></i> 受理審核清單列印</button>
+                        <button id="btn-prepare-approval" type="button" class="btn btn-success me-2"><i class="bi bi-send-check"></i> 審核</button>
+                        <button id="btn-split-amount" type="button" class="btn btn-warning me-2"><i class="bi bi-distribute-vertical"></i> 金額分割</button>
+                        <button id="btn-cancel-case" type="button" class="btn btn-danger me-2"><i class="bi bi-trash"></i> 註銷本案</button>
+                        <button id="btn-print-pdf" type="button" class="btn btn-light border me-2"><i class="bi bi-file-earmark-pdf"></i> 頁面(或pdf)列印</button>
+                        <button id="btn-return" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> 返回</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="p-3 mb-3 rounded demo-switcher">
+                        <div class="row align-items-center">
+                            <div class="col-auto"><strong class="text-danger"><i class="bi bi-tools"></i> 情境快速切換器 (Demo專用)</strong></div>
+                            <div class="col-auto"><label for="demoClaimTypeSwitcher" class="col-form-label">切換請領種類查看介面變化</label></div>
+                            <div class="col-auto"><select id="demoClaimTypeSwitcher" class="form-select size-auto"></select></div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 mb-3 border bg-white rounded">
+                         <div class="form-field-container">
+                            <label class="col-form-label">請領種類</label>
+                            <div class="field-content"><p id="display-claim-type" class="form-text-display mb-0"></p></div>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item" role="presentation"><a class="nav-link active" id="tab-basic" href="op6_edit.html">基本資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-beneficiary" href="op6_edit2.html">受款人</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-approval-letter" href="op6_edit3.html">核定函</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-issuance-data" href="op6_edit4.html">請領核發資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-other-benefits" href="op6_edit5.html">請領其他給付資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-pension-changes" href="op6_edit6.html">勞退個人異動查詢</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-account-details" href="op6_edit7.html">個人專戶明細資料</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="tab-case-notes" href="op6_edit8.html">案件記事</a></li>
+                    </ul>
+
+                    <div class="tab-content border border-top-0" id="myTabContent">
+                        <div class="tab-pane fade show active" id="pane-basic" role="tabpanel">
+                           
+                            <div class="flex-form-container header-grid">
+                               <div class="flex-form-item">
+                                   <div class="form-field-container">
+                                       <label class="col-form-label">受理編號</label>
+                                       <div class="field-content"><p id="display-case-id" class="form-text-display"></p></div>
+                                   </div>
+                               </div>
+                               <div class="flex-form-item">
+                                   <div class="form-field-container">
+                                       <label class="col-form-label">版次</label>
+                                       <div class="field-content"><p id="display-version" class="form-text-display"></p></div>
+                                   </div>
+                               </div>
+                               <div class="flex-form-item">
+                                   <div class="form-field-container">
+                                       <label class="col-form-label">申請次數</label>
+                                       <div class="field-content"><p id="display-apply-count" class="form-text-display"></p></div>
+                                   </div>
+                               </div>
+                               <div class="flex-form-item" data-claim-type-show="31,41,43,51,53">
+                                   <div class="form-field-container">
+                                       <label for="emergency-type" class="col-form-label">緊急</label>
+                                       <div class="field-content">
+                                           <select id="emergency-type" class="form-select">
+                                               <option value=""></option>
+                                               <option value="project">專案處理</option>
+                                           </select>
+                                       </div>
+                                   </div>
+                               </div>
+                               <div class="flex-form-item" data-claim-type-show="31,32,41,42,43,46">
+                                   <div class="form-field-container">
+                                       <label for="residing-in-country" class="col-form-label"><span class="required">*</span>居住國內</label>
+                                       <div class="field-content">
+                                           <select id="residing-in-country" class="form-select">
+                                               <option value="Y">Y</option>
+                                               <option value="N">N</option>
+                                           </select>
+                                       </div>
+                                   </div>
+                               </div>
+                               <div class="flex-form-item" data-claim-type-show="31,32,41,42,43,46">
+                                   <div class="form-field-container">
+                                       <label class="col-form-label">網路申辦</label>
+                                       <div class="field-content"><p id="display-online-apply" class="form-text-display">N</p></div>
+                                   </div>
+                               </div>
+                               <div class="flex-form-item" data-claim-type-show="51,52,53">
+                                   <div class="form-field-container">
+                                       <label class="col-form-label">法院扣押</label>
+                                       <div class="field-content"><p id="display-court-seizure" class="form-text-display"></p></div>
+                                   </div>
+                               </div>
+                            </div>
+
+                            <div class="flex-form-container">
+                                <!-- 新增唯讀：請領年限（僅 32 顯示） -->
+                                <div class="flex-form-item" data-claim-type-show="32">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">請領年限</label>
+                                        <div class="field-content"><p id="display-claim-years" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <!-- 新增唯讀：期數（32/42/46/52 顯示） -->
+                                <div class="flex-form-item" data-claim-type-show="32,42,46,52">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">期數</label>
+                                        <div class="field-content"><p id="display-period-count" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <!-- 新增唯讀：郵戳日期（51/52/53 顯示） -->
+                                <div class="flex-form-item" data-claim-type-show="51,52,53">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">郵戳日期</label>
+                                        <div class="field-content"><p id="display-postmark-date" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <!-- 新增唯讀：判決日期（51/52/53 顯示） -->
+                                <div class="flex-form-item" data-claim-type-show="51,52,53">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">判決日期</label>
+                                        <div class="field-content"><p id="display-judgment-date" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item">
+                                    <div class="form-field-container">
+                                        <label for="laborer-name" class="col-form-label"><span class="required">*</span>勞工姓名</label>
+                                        <div class="field-content"><input type="text" id="laborer-name" class="form-control" maxlength="200"></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item">
+                                    <div class="form-field-container">
+                                        <label for="laborer-id" class="col-form-label"><span class="required">*</span>勞工身分證字號</label>
+                                        <div class="field-content"><input type="text" id="laborer-id" class="form-control" maxlength="10"></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item">
+                                    <div class="form-field-container">
+                                        <label for="laborer-dob" class="col-form-label"><span class="required">*</span>勞工出生日期</label>
+                                        <div class="field-content"><input type="text" id="laborer-dob" class="form-control" maxlength="7" placeholder="例: 0600101"></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item">
+                                    <div class="form-field-container">
+                                        <label for="apply-date" class="col-form-label"><span class="required">*</span>申請日期</label>
+                                        <div class="field-content"><input type="text" id="apply-date" class="form-control" maxlength="7" placeholder="例: 1130615"></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="31,41,43,51,52,53">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">勞工死亡日期</label>
+                                        <div class="field-content"><p id="display-laborer-dod" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="31,41,43,51,52,53">
+                                    <div class="form-field-container" id="civil-law-inheritance-container">
+                                        <label for="civil-law-inheritance" class="col-form-label">民法繼承案件</label>
+                                        <div class="field-content form-check pt-2">
+                                            <input class="form-check-input" type="checkbox" id="civil-law-inheritance" style="width: 1.25em; height: 1.25em;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="32">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">請領年限</label>
+                                        <div class="field-content"><p id="display-claim-years" class="form-text-display">20</p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="42,46,32,52">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">期數</label>
+                                        <div class="field-content"><p id="display-installments" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="51,52,53">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">郵戳日期</label>
+                                        <div class="field-content"><p id="display-postmark-date" class="form-text-display">1130614</p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="51,52,53">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">判決日期</label>
+                                        <div class="field-content"><p id="display-judgment-date" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="32,42,46">
+                                    <div class="form-field-container">
+                                       <label for="bli-receipt-date" class="col-form-label"><span class="required">*</span>本局收到日期</label>
+                                        <div class="field-content"><input type="text" id="bli-receipt-date" class="form-control" maxlength="7"></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="31,41,43">
+                                    <div class="form-field-container">
+                                        <label for="has-annuity" class="col-form-label">有無延壽年金</label>
+                                        <div class="field-content">
+                                            <select id="has-annuity" class="form-select">
+                                                <option value="no" selected>無</option>
+                                                <option value="yes">有</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="31,32">
+                                    <div class="form-field-container">
+                                        <label for="proof-type" class="col-form-label">提供證明種類</label>
+                                        <div class="field-content">
+                                            <select id="proof-type" class="form-select">
+                                                <option value="1" selected>1-空白</option>
+                                                <option value="2">2-身心障礙手冊</option>
+                                                <option value="3">3-身心障礙證明</option>
+                                                <option value="4">4-公保相當程度之全殘廢給付證明</option>
+                                                <option value="5">5-公保非相當程度之全殘廢給付證明</option>
+                                                <option value="6">6-未檢附</option>
+                                                <option value="7">7-其他_______（須輸入）</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="31,32">
+                                    <div class="form-field-container">
+                                        <label for="disability-level" class="col-form-label">障礙程度</label>
+                                        <div class="field-content">
+                                            <select id="disability-level" class="form-select">
+                                                <option value="1">1-極重度</option>
+                                                <option value="2">2-重度</option>
+                                                <option value="3">3-中度</option>
+                                                <option value="4">4-輕度</option>
+                                                <option value="5">5-其他</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item flex-form-item-full" data-claim-type-show="31,32">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">障礙類別</label>
+                                        <div class="field-content">
+                                            <div class="disability-category-container">
+                                                <div class="disability-input-group">
+                                                    <input type="text" class="disability-input-2" maxlength="2">
+                                                    <span class="disability-separator">-</span>
+                                                    <input type="text" class="disability-input-1" maxlength="1">
+                                                </div>
+                                                <span class="disability-separator">、</span>
+                                                <div class="disability-input-group">
+                                                    <input type="text" class="disability-input-2" maxlength="2">
+                                                    <span class="disability-separator">-</span>
+                                                    <input type="text" class="disability-input-1" maxlength="1">
+                                                </div>
+                                                <span class="disability-separator">、</span>
+                                                <div class="disability-input-group">
+                                                    <input type="text" class="disability-input-2" maxlength="2">
+                                                    <span class="disability-separator">-</span>
+                                                    <input type="text" class="disability-input-1" maxlength="1">
+                                                </div>
+                                                <span class="disability-separator">、</span>
+                                                <div class="disability-input-group">
+                                                    <input type="text" class="disability-input-2" maxlength="2">
+                                                    <span class="disability-separator">-</span>
+                                                    <input type="text" class="disability-input-1" maxlength="1">
+                                                </div>
+                                                <span class="disability-separator">、</span>
+                                                <div class="disability-input-group">
+                                                    <input type="text" class="disability-input-2" maxlength="2">
+                                                    <span class="disability-separator">-</span>
+                                                    <input type="text" class="disability-input-1" maxlength="1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                           </div>
+
+                           <div class="flex-form-container">
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">累計提繳年資</label><div class="field-content"><p class="form-text-display">15年3月</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">雇主提繳累計</label><div class="field-content"><p class="form-text-display">1,050,000</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">個人提繳累計</label><div class="field-content"><p class="form-text-display">200,000</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">雇提收益累計</label><div class="field-content"><p class="form-text-display">300,000</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">個提收益累計</label><div class="field-content"><p class="form-text-display">55,000</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">舊制部分轉入金額</label><div class="field-content"><p class="form-text-display">0</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">提繳金累計</label><div class="field-content"><p class="form-text-display">1,250,000</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">雇提當期收益</label><div class="field-content"><p class="form-text-display">0</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">個提當期收益</label><div class="field-content"><p class="form-text-display">0</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">累積收益</label><div class="field-content"><p class="form-text-display">355,000</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">保證收益</label><div class="field-content"><p class="form-text-display">12,000</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">補足收益</label><div class="field-content"><p class="form-text-display">0</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">核定金額</label><div class="field-content"><p class="form-text-display">1,605,000</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">扣減筆數-金額</label><div class="field-content"><p class="form-text-display">0 - 0</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">匯款手續費</label><div class="field-content"><p class="form-text-display">0</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">實發金額</label><div class="field-content"><p class="form-text-display">1,605,000</p></div></div></div>
+                                <div class="flex-form-item" data-claim-type-show="31,32,41,42,43,46"><div class="form-field-container"><label for="retirement-service-years" class="col-form-label">退職服務年資</label><div class="field-content"><input type="text" id="retirement-service-years" class="form-control" maxlength="2"></div></div></div>
+                                <div class="flex-form-item" data-claim-type-show="31,32,41,42,43,46"><div class="form-field-container"><label class="col-form-label">本次扣繳稅額</label><div class="field-content"><p class="form-text-display">0</p></div></div></div>
+                                <div class="flex-form-item" data-claim-type-show="31,32,41,42,43,46"><div class="form-field-container"><label class="col-form-label">累計扣繳稅額</label><div class="field-content"><p class="form-text-display">0</p></div></div></div>
+                                <div class="flex-form-item" data-claim-type-show="31,32,41,42,43,46"><div class="form-field-container"><label class="col-form-label">本次退職所得</label><div class="field-content"><p class="form-text-display">1,605,000</p></div></div></div>
+                                <div class="flex-form-item" data-claim-type-show="31,32,41,42,43,46"><div class="form-field-container"><label class="col-form-label">累計退職所得</label><div class="field-content"><p class="form-text-display">1,605,000</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">編審註記</label><div class="field-content"><p class="form-text-display">0000</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label for="approval-format" class="col-form-label">核定格式</label><div class="field-content"><input type="text" id="approval-format" class="form-control" maxlength="3"></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">同類筆數</label><div class="field-content"><p class="form-text-display">1</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label class="col-form-label">勞保給付筆數</label><div class="field-content"><p class="form-text-display">0</p></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label for="principal-calc-date" class="col-form-label">本金迄算年月</label><div class="field-content"><input type="text" id="principal-calc-date" class="form-control" maxlength="7"></div></div></div>
+                                <div class="flex-form-item"><div class="form-field-container"><label for="earnings-calc-date" class="col-form-label">本金迄算收益日期</label><div class="field-content"><input type="text" id="earnings-calc-date" class="form-control" maxlength="7"></div></div></div>
+                                <div class="flex-form-item" data-claim-type-show="32,42,46,52">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">月退核發起訖年月</label>
+                                        <div class="field-content"><p id="display-monthly-pension-period" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="32,42,46,52">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">核定期(季)數</label>
+                                        <div class="field-content"><p id="display-approved-periods" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="32,42,46,52">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">利率</label>
+                                        <div class="field-content"><p id="display-interest-rate" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="32,42,46,52">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">每月核定金額</label>
+                                        <div class="field-content"><p id="display-monthly-approved-amount" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="32,42,46,52">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">每季核定金額</label>
+                                        <div class="field-content"><p id="display-quarterly-approved-amount" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="32,42,46,52">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">首發月退核定月數</label>
+                                        <div class="field-content"><p id="display-first-payment-months" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-form-item" data-claim-type-show="32,42,46,52">
+                                    <div class="form-field-container">
+                                        <label class="col-form-label">首發月退核定金額</label>
+                                        <div class="field-content"><p id="display-first-payment-amount" class="form-text-display"></p></div>
+                                    </div>
+                                </div>
+                           </div>
+                           
+                           <div class="flex-form-container">
+                                <div class="flex-form-item" data-claim-type-show="51,52,53"><div class="form-field-container"><label for="total-seizure-amount" class="col-form-label">設定扣押總額</label><div class="field-content"><input type="text" id="total-seizure-amount" class="form-control" maxlength="7"></div></div></div>
+                                <div class="flex-form-item" data-claim-type-show="51,52,53"><div class="form-field-container"><label for="report-seizure-date" class="col-form-label">回報扣押日期</label><div class="field-content"><input type="text" id="report-seizure-date" class="form-control" maxlength="7"></div></div></div>
+                                <div class="flex-form-item" data-claim-type-show="51,52,53"><div class="form-field-container"><label for="paid-seizure-amount" class="col-form-label">支付扣押金額</label><div class="field-content"><input type="text" id="paid-seizure-amount" class="form-control" maxlength="7"></div></div></div>
+                                <div class="flex-form-item" data-claim-type-show="51,52,53"><div class="form-field-container"><label for="seizure-balance" class="col-form-label">扣押餘額</label><div class="field-content"><input type="text" id="seizure-balance" class="form-control" maxlength="7"></div></div></div>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const claimTypeFromUrl = urlParams.get('claimType');
+        const caseIdFromUrl = urlParams.get('caseId');
+        const caseIdCanonical = caseIdFromUrl || (function(){ try { return sessionStorage.getItem('op6_current_case_id'); } catch(e){ return null; } })() || 'demo_case_01';
+        const storageKey = `op6_edit_state_${caseIdCanonical}`;
+
+        const claimTypeMap = {
+            '31': '提前請領退休金(31)', '32': '提前請領月退休金(32)', '41': '一次退休金(41)',
+            '42': '月退休金(42)', '43': '續提退休金(43)', '46': '續提月退休金(46)',
+            '51': '死亡退休金(51)', '52': '月退死亡退休金(52)', '53': '死亡退休金(含月退)(53)'
+        };
+        const demoSwitcher = document.getElementById('demoClaimTypeSwitcher');
+        
+        let state = {};
+        let isFormDirty = false;
+
+        for (const key in claimTypeMap) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = claimTypeMap[key];
+            demoSwitcher.appendChild(option);
+        }
+
+        function createNewState(claimType, caseId) {
+            let newState = {
+                demoClaimType: claimType,
+                caseId: caseId || 'A01-1-24-123456-', version: '1', applyCount: '1', emergencyType: '',
+                residingInCountry: 'Y', courtSeizure: 'N', laborerName: '王大明', laborerId: 'A123456789', laborerDob: '0600101',
+                applyDate: '1130615', laborerDod: '', civilLawInheritance: false, // 【修改】預設值改為 false
+                bliReceiptDate: '1130615', hasAnnuity: 'no',
+                proofType: '1', disabilityLevel: '1', installments: '1', retirementServiceYears: '15', approvalFormat: '51',
+                principalCalcDate: '1130630', earningsCalcDate: '1130701', totalSeizureAmount: '', reportSeizureDate: '',
+                paidSeizureAmount: '', seizureBalance: '',
+                monthlyPensionPeriod: '11308-11407', approvedPeriods: '4', interestRate: '1.78',
+                monthlyApprovedAmount: '8500', quarterlyApprovedAmount: '25500',
+                firstPaymentMonths: '2', firstPaymentAmount: '17000',
+                // 新增唯讀欄位 demo 預設
+                claimYears: '', periodCount: '', postmarkDate: '', judgmentDate: ''
+            };
+
+            if (['51', '52', '53'].includes(claimType)) {
+                newState.laborerDod = '1130610';
+                newState.civilLawInheritance = true; // 僅在Demo切換時為true，讓使用者看到此欄位
+                newState.postmarkDate = '1130705';
+                newState.judgmentDate = '1130710';
+            }
+            // 依規則：若 DOD 有值且為 31/41/43 亦可顯示繼承案件（Demo預設給值以便查看）
+            if (['31','41','43'].includes(claimType)) {
+                newState.laborerDod = '1130610';
+            }
+            if (['51', '52'].includes(claimType)) {
+                newState.courtSeizure = 'Y';
+                newState.totalSeizureAmount = '100000';
+                newState.reportSeizureDate = '1130701';
+                newState.paidSeizureAmount = '25000';
+                newState.seizureBalance = '75000';
+            }
+            if (claimType === '32') {
+                newState.claimYears = '10';
+                newState.periodCount = '12';
+            }
+            if (['42','46','52'].includes(claimType)) {
+                newState.periodCount = '12';
+            }
+            return newState;
+        }
+
+        // 將現有 state 與指定 claimType 的預設值合併（僅補齊缺漏，不覆蓋已存在的非空值）
+        function mergeDefaultsForClaim(stateObj) {
+            const ct = (stateObj && stateObj.demoClaimType) || claimTypeFromUrl || '32';
+            const defaults = createNewState(ct, (stateObj && stateObj.caseId) || caseIdCanonical);
+            const merged = { ...defaults, ...(stateObj || {}) };
+            // 針對新增欄位或空字串也視為缺漏，補上預設
+            Object.keys(defaults).forEach(k => {
+                const v = merged[k];
+                if (v === undefined || v === null || v === '') {
+                    merged[k] = defaults[k];
+                }
+            });
+            return merged;
+        }
+        
+        function loadState() {
+            let savedStateJSON = sessionStorage.getItem(storageKey);
+            if (savedStateJSON) {
+                const loaded = JSON.parse(savedStateJSON);
+                // 以 URL 參數為準，覆蓋舊的暫存類別/受理編號，並補齊缺漏欄位
+                if (claimTypeFromUrl && loaded.demoClaimType !== claimTypeFromUrl) {
+                    loaded.demoClaimType = claimTypeFromUrl;
+                }
+                state = mergeDefaultsForClaim(loaded);
+            } else {
+                // fallback：若無保存，才根據 URL 的 claimType 建立 demo state
+                if (claimTypeFromUrl) {
+                    state = createNewState(claimTypeFromUrl, caseIdCanonical);
+                } else {
+                    state = createNewState('32', caseIdCanonical);
+                }
+            }
+            // 確保 caseId 以 URL 為準並回寫
+            state.caseId = caseIdCanonical;
+            try { sessionStorage.setItem(storageKey, JSON.stringify(state)); } catch(e) {}
+            try { sessionStorage.setItem('op6_current_case_id', state.caseId || 'demo_case_01'); } catch(e) {}
+        }
+
+        function markDirty() { 
+            isFormDirty = true; 
+            try { sessionStorage.setItem('op6_edit_dirty_any', 'true'); } catch(e) {}
+            updatePrintChecklistAvailability();
+        }
+
+        function saveState() {
+            // 僅即時儲存（不做即時檢核）；檢核延後至按下「確認」時一次性進行
+            state.emergencyType = document.getElementById('emergency-type').value;
+            state.residingInCountry = document.getElementById('residing-in-country').value;
+            const nameEl = document.getElementById('laborer-name');
+            const idEl = document.getElementById('laborer-id');
+            const dobEl = document.getElementById('laborer-dob');
+            const applyEl = document.getElementById('apply-date');
+            const rcptEl = document.getElementById('bli-receipt-date');
+            // 部分成功：僅更新沒有錯誤訊息的欄位
+            if (!nameEl.nextElementSibling || !nameEl.nextElementSibling.classList?.contains('error-message')) { state.laborerName = nameEl.value; }
+            if (!idEl.nextElementSibling || !idEl.nextElementSibling.classList?.contains('error-message')) { state.laborerId = idEl.value; }
+            if (!dobEl.nextElementSibling || !dobEl.nextElementSibling.classList?.contains('error-message')) { state.laborerDob = dobEl.value; }
+            if (!applyEl.nextElementSibling || !applyEl.nextElementSibling.classList?.contains('error-message')) { state.applyDate = applyEl.value; }
+            state.civilLawInheritance = document.getElementById('civil-law-inheritance').checked;
+            if (!rcptEl || (!rcptEl.nextElementSibling || !rcptEl.nextElementSibling.classList?.contains('error-message'))) {
+                if (rcptEl) state.bliReceiptDate = rcptEl.value;
+            }
+            state.hasAnnuity = document.getElementById('has-annuity').value;
+            state.proofType = document.getElementById('proof-type').value;
+            state.disabilityLevel = document.getElementById('disability-level').value;
+            // 退職服務年資：空白視為 0（存檔亦同）
+            (function(){
+                const el = document.getElementById('retirement-service-years');
+                if (el) {
+                    const raw = (el.value || '').trim();
+                    state.retirementServiceYears = raw === '' ? '0' : raw;
+                }
+            })();
+            state.approvalFormat = document.getElementById('approval-format').value;
+            state.principalCalcDate = document.getElementById('principal-calc-date').value;
+            state.earningsCalcDate = document.getElementById('earnings-calc-date').value;
+            state.totalSeizureAmount = document.getElementById('total-seizure-amount').value;
+            state.reportSeizureDate = document.getElementById('report-seizure-date').value;
+            state.paidSeizureAmount = document.getElementById('paid-seizure-amount').value;
+            state.seizureBalance = document.getElementById('seizure-balance').value;
+            sessionStorage.setItem(storageKey, JSON.stringify(state));
+            // 同步寫入以 caseId 命名的別名 key，供其他頁籤讀取
+            try {
+                const aliasKey = `op6_edit_state_${state.caseId || caseIdFromUrl || 'demo_case_01'}`;
+                if (aliasKey !== storageKey) {
+                    sessionStorage.setItem(aliasKey, JSON.stringify(state));
+                }
+                sessionStorage.setItem('op6_current_case_id', state.caseId || caseIdFromUrl || 'demo_case_01');
+            } catch(e) {}
+            markDirty();
+            if (typeof updatePrintChecklistAvailability === 'function') updatePrintChecklistAvailability();
+        }
+
+        function formatCaseId(val) {
+            const s = (val || '').toString();
+            if (!s) return '';
+            const parts = s.split('-');
+            for (let i = parts.length - 1; i >= 0; i--) {
+                if (parts[i] === '' || parts[i] === undefined || parts[i] === null) { parts.pop(); } else { break; }
+            }
+            return parts.join('-');
+        }
+
+        function updateUIFromLoadedState() {
+            if (!state) return;
+            const currentClaimType = state.demoClaimType;
+            demoSwitcher.value = currentClaimType;
+            document.getElementById('display-claim-type').textContent = claimTypeMap[currentClaimType] || '未知';
+            
+            const displayCaseId = formatCaseId(state.caseId || '');
+            document.getElementById('display-case-id').textContent = displayCaseId;
+
+            document.getElementById('display-version').textContent = state.version || '1';
+            document.getElementById('display-apply-count').textContent = state.applyCount || '1';
+            document.getElementById('emergency-type').value = state.emergencyType || '';
+            document.getElementById('residing-in-country').value = state.residingInCountry || 'Y';
+            document.getElementById('display-court-seizure').textContent = state.courtSeizure || 'N';
+            document.getElementById('laborer-name').value = state.laborerName || '';
+            document.getElementById('laborer-id').value = state.laborerId || '';
+            document.getElementById('laborer-dob').value = state.laborerDob || '';
+            document.getElementById('apply-date').value = state.applyDate || '';
+            document.getElementById('display-laborer-dod').textContent = state.laborerDod || '';
+            
+            // 【修改】確保checkbox狀態與state同步
+            document.getElementById('civil-law-inheritance').checked = state.civilLawInheritance || false;
+
+            document.getElementById('bli-receipt-date').value = state.bliReceiptDate || '';
+            document.getElementById('has-annuity').value = state.hasAnnuity || 'no';
+            document.getElementById('proof-type').value = state.proofType || '1';
+            document.getElementById('disability-level').value = state.disabilityLevel || '1';
+            document.getElementById('display-installments').textContent = state.installments || '';
+            // 退職服務年資：空白視為 0（顯示亦同）
+            (function(){
+                const v = (state.retirementServiceYears == null ? '' : String(state.retirementServiceYears).trim());
+                document.getElementById('retirement-service-years').value = v === '' ? '0' : v;
+            })();
+            document.getElementById('approval-format').value = state.approvalFormat || '';
+            document.getElementById('principal-calc-date').value = state.principalCalcDate || '';
+            document.getElementById('earnings-calc-date').value = state.earningsCalcDate || '';
+            
+            document.getElementById('display-monthly-pension-period').textContent = state.monthlyPensionPeriod || '';
+            document.getElementById('display-approved-periods').textContent = state.approvedPeriods || '';
+            document.getElementById('display-interest-rate').textContent = state.interestRate || '';
+            document.getElementById('display-monthly-approved-amount').textContent = state.monthlyApprovedAmount || '';
+            document.getElementById('display-quarterly-approved-amount').textContent = state.quarterlyApprovedAmount || '';
+            document.getElementById('display-first-payment-months').textContent = state.firstPaymentMonths || '';
+            document.getElementById('display-first-payment-amount').textContent = state.firstPaymentAmount || '';
+
+            // 新增唯讀欄位顯示
+            const claimYearsEl = document.getElementById('display-claim-years');
+            if (claimYearsEl) claimYearsEl.textContent = state.claimYears || '';
+            const periodCountEl = document.getElementById('display-period-count');
+            if (periodCountEl) periodCountEl.textContent = state.periodCount || '';
+            const postmarkEl = document.getElementById('display-postmark-date');
+            if (postmarkEl) postmarkEl.textContent = state.postmarkDate || '';
+            const judgmentEl = document.getElementById('display-judgment-date');
+            if (judgmentEl) judgmentEl.textContent = state.judgmentDate || '';
+
+            document.getElementById('total-seizure-amount').value = state.totalSeizureAmount || '';
+            document.getElementById('report-seizure-date').value = state.reportSeizureDate || '';
+            document.getElementById('paid-seizure-amount').value = state.paidSeizureAmount || '';
+            document.getElementById('seizure-balance').value = state.seizureBalance || '';
+
+            updateFieldVisibility(currentClaimType);
+            const activeTabId = document.querySelector('#myTab .nav-link.active')?.id || 'tab-basic';
+            updateButtonsForTab(activeTabId, currentClaimType);
+
+            const seizureFields = [
+                document.getElementById('total-seizure-amount'),
+                document.getElementById('report-seizure-date'),
+                document.getElementById('paid-seizure-amount'),
+                document.getElementById('seizure-balance')
+            ];
+            const isSeizureCase = state.courtSeizure === 'Y';
+            seizureFields.forEach(field => {
+                if (field) {
+                    field.disabled = !isSeizureCase;
+                }
+            });
+        }
+
+        // 依 MD 補齊：基本資料頁驗證（日期/必填/邏輯）
+        function validateBasicVisibleFields(strict) {
+            // 清除舊錯誤
+            document.querySelectorAll('#pane-basic .error-message').forEach(el => el.remove());
+
+            const result = { hasError: false, firstErrorElement: null };
+
+            const getFieldContent = (el) => el?.closest('.form-field-container')?.querySelector('.field-content') || el?.parentElement || el;
+            const showError = (el, msg) => {
+                if (!el) return;
+                const div = document.createElement('div');
+                div.className = 'error-message';
+                div.textContent = msg;
+                // 儘量插在輸入元件後，方便相鄰檢查；否則退而附加到欄位內容容器
+                try { el.insertAdjacentElement('afterend', div); }
+                catch(e) { (getFieldContent(el) || el).appendChild(div); }
+                if (!result.firstErrorElement) { result.firstErrorElement = el; }
+                result.hasError = true;
+            };
+
+            // 工具：民國日期解析與比較
+            const parseRocDate = (yyyMMdd) => {
+                const s = (yyyMMdd || '').trim();
+                if (!/^\d{7}$/.test(s)) return null;
+                const y = 1911 + parseInt(s.slice(0, 3), 10);
+                const m = parseInt(s.slice(3, 5), 10);
+                const d = parseInt(s.slice(5, 7), 10);
+                if (m < 1 || m > 12) return null;
+                const dt = new Date(y, m - 1, d);
+                if (dt.getFullYear() !== y || (dt.getMonth() + 1) !== m || dt.getDate() !== d) return null;
+                return dt;
+            };
+            const today = new Date();
+            const cmp = (a, b) => (a.getTime() < b.getTime() ? -1 : (a.getTime() > b.getTime() ? 1 : 0));
+
+            // 取得必要欄位
+            const selResiding = document.getElementById('residing-in-country'); // 必填
+            const inputName = document.getElementById('laborer-name');
+            const inputId = document.getElementById('laborer-id');
+            const inputDob = document.getElementById('laborer-dob');
+            const inputApply = document.getElementById('apply-date');
+            const inputBli = document.getElementById('bli-receipt-date');
+            const inputRetYears = document.getElementById('retirement-service-years');
+            const inputPrincipalCalc = document.getElementById('principal-calc-date');
+            const inputEarningsCalc = document.getElementById('earnings-calc-date');
+            const inputReportSeizureDate = document.getElementById('report-seizure-date');
+            const inputTotalSeizure = document.getElementById('total-seizure-amount');
+            const inputPaidSeizure = document.getElementById('paid-seizure-amount');
+            const inputSeizureBalance = document.getElementById('seizure-balance');
+
+            const currentClaimType = (state && state.demoClaimType) || '';
+            const isMonthlyTypes = ['32', '42', '46'].includes(currentClaimType);
+
+            // 規則1：必要欄位（依畫面出現的「*」判斷）— 僅在按下確認時一次性檢核
+            document.querySelectorAll('#pane-basic label.col-form-label .required').forEach(star => {
+                const label = star.closest('label');
+                if (!label || label.offsetParent === null) return; // 不可見
+                const container = label.closest('.form-field-container');
+                const field = container ? container.querySelector('.field-content input, .field-content select, .field-content textarea') : null;
+                if (!field || field.disabled || field.offsetParent === null) return;
+                const val = (field.type === 'checkbox' || field.type === 'radio') ? (field.checked ? 'Y' : '') : (field.value || '').trim();
+                if (!val) { showError(field, '此為必要欄位，請勿空白。'); }
+            });
+
+            // 規則2：身分證字號格式（若有填）
+            if (inputId && inputId.value) {
+                const s = inputId.value.trim().toUpperCase();
+                if (!/^[A-Z][0-9]{9}$/.test(s)) {
+                    showError(inputId, '身分證字號格式錯誤（英文字母1碼+數字9碼）。');
+                }
+            }
+
+            // 規則3：日期欄位格式與邏輯
+            const dobStr = inputDob?.value || '';
+            const applyStr = inputApply?.value || '';
+            const bliStr = inputBli?.value || '';
+            const dodStr = state?.laborerDod || '';
+
+            // 出生日期（可選，但若填則需有效）
+            let dob = null;
+            if (dobStr) {
+                dob = parseRocDate(dobStr);
+                if (!dob) { showError(inputDob, '日期格式錯誤，請輸入民國年月日7碼（YYYMMDD）。'); }
+                else if (cmp(dob, today) > 0) { showError(inputDob, '出生日期不得晚於系統日。'); }
+            }
+
+            // 申請日期（可選，但若填則需有效與邏輯）
+            let applyDt = null;
+            if (applyStr) {
+                applyDt = parseRocDate(applyStr);
+                if (!applyDt) { showError(inputApply, '日期格式錯誤，請輸入民國年月日7碼（YYYMMDD）。'); }
+                else {
+                    if (dob && cmp(applyDt, dob) < 0) { showError(inputApply, '申請日期不得早於勞工出生日期。'); }
+                    if (cmp(applyDt, today) > 0) { showError(inputApply, '申請日期不得晚於系統日。'); }
+                }
+            }
+
+            // 本局收到日期：欄位出現時需符合日期與邏輯（月退相關不得早於申請日）
+            // 必填性已由通用「*」檢核處理，這裡僅在有值時做進一步格式/邏輯檢核
+            if (inputBli && inputBli.offsetParent !== null && bliStr) {
+                const bliDt = parseRocDate(bliStr);
+                if (!bliDt) { showError(inputBli, '日期格式錯誤，請輸入民國年月日7碼（YYYMMDD）。'); }
+                else {
+                    if (cmp(bliDt, today) > 0) { showError(inputBli, '本局收到日期不得晚於系統日。'); }
+                    if (isMonthlyTypes && applyDt && cmp(bliDt, applyDt) < 0) { showError(inputBli, '本局收到日期不得早於申請日期。'); }
+                }
+            }
+
+            // 勞工死亡日期（僅顯示用，但若存在需做邏輯檢核）
+            if (dodStr) {
+                const dodDt = parseRocDate(dodStr);
+                if (dodDt) {
+                    const dodEl = document.getElementById('display-laborer-dod') || inputDob;
+                    if (dob && cmp(dodDt, dob) <= 0) { showError(dodEl, '勞工死亡日期須晚於勞工出生日期。'); }
+                    if (cmp(dodDt, today) > 0) { showError(dodEl, '勞工死亡日期不得晚於系統日。'); }
+                }
+            }
+
+            // 規則4：數字欄位
+            const numberOnly = (el, msgRange) => {
+                if (el && el.value) {
+                    if (!/^\d+$/.test(el.value.trim())) {
+                        showError(el, '僅允許半形數字。');
+                        return null;
+                    }
+                    const n = parseInt(el.value.trim(), 10);
+                    if (msgRange && (n < msgRange.min || n > msgRange.max)) {
+                        showError(el, `數值範圍應為 ${msgRange.min}–${msgRange.max}。`);
+                    }
+                    return n;
+                }
+                return null;
+            };
+            numberOnly(inputRetYears, { min: 0, max: 99 }); // 空值視為 0，不報錯
+            numberOnly(inputTotalSeizure, null);
+            numberOnly(inputPaidSeizure, null);
+            numberOnly(inputSeizureBalance, null);
+
+            // 規則6：扣押四欄位（僅在 51/52/53 且法院扣押=Y 時檢核）
+            (function validateSeizureBlock(){
+                try {
+                    const ct = (state && state.demoClaimType) || '';
+                    const seizureBlockVisible = ['51','52','53'].includes(ct) && (state && state.courtSeizure === 'Y');
+                    if (!seizureBlockVisible) return;
+
+                    const totalEl = document.getElementById('total-seizure-amount');
+                    const paidEl = document.getElementById('paid-seizure-amount');
+                    const balEl = document.getElementById('seizure-balance');
+                    const rptEl = document.getElementById('report-seizure-date');
+
+                    const t = parseInt((totalEl?.value || '0').replace(/\D/g,''), 10) || 0;
+                    const p = parseInt((paidEl?.value || '0').replace(/\D/g,''), 10) || 0;
+                    const b = parseInt((balEl?.value || '0').replace(/\D/g,''), 10) || 0;
+
+                    // 總額需等於 支付+餘額（三者任一有值時檢核）
+                    const anyAmountFilled = ((totalEl?.value||'').trim()!=='' || (paidEl?.value||'').trim()!=='' || (balEl?.value||'').trim()!=='');
+                    if (anyAmountFilled && (t !== (p + b))) {
+                        showError(totalEl || paidEl || balEl, '設定扣押總額應等於「支付扣押金額＋扣押餘額」。');
+                    }
+
+                    // 回報扣押日期：若有填，需為有效民國日且不得晚於系統日
+                    if (rptEl && (rptEl.value||'').trim() !== '') {
+                        const rptDt = parseRocDate(rptEl.value);
+                        if (!rptDt) {
+                            showError(rptEl, '日期格式錯誤，請輸入民國年月日7碼（YYYMMDD）。');
+                        } else if (cmp(rptDt, today) > 0) {
+                            showError(rptEl, '回報扣押日期不得晚於系統日。');
+                        }
+                    }
+                } catch(e) {}
+            })();
+
+            // 規則5：其他 7 碼日期格式（僅格式檢核）
+            const checkDateFormatOnly = (el) => {
+                if (el && el.value) {
+                    if (!parseRocDate(el.value)) { showError(el, '日期格式錯誤，請輸入民國年月日7碼（YYYMMDD）。'); }
+                }
+            };
+            checkDateFormatOnly(inputPrincipalCalc);
+            checkDateFormatOnly(inputEarningsCalc);
+
+            // 嚴格模式：捲到第一個錯誤
+            if (strict && result.hasError && result.firstErrorElement) {
+                try { result.firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
+            }
+            return result;
+        }
+
+        function updateFieldVisibility(currentClaimType) {
+            document.querySelectorAll('.flex-form-item[data-claim-type-show]').forEach(item => {
+                const inheritanceContainer = item.querySelector('#civil-law-inheritance-container');
+                const visibleTypes = item.getAttribute('data-claim-type-show').split(',');
+                let isVisible = visibleTypes.includes(currentClaimType);
+
+                // 若為繼承案件區塊或死亡日期顯示區塊，還需勞工死亡日期有值才顯示
+                const requiresDod = !!inheritanceContainer; // 死亡日期欄位本身常駐顯示，僅繼承案件/相關區塊需有DOD才顯示
+                if (requiresDod) {
+                    const dodValue = state.laborerDod || '';
+                    isVisible = isVisible && (dodValue.trim() !== '');
+                }
+
+                if (isVisible) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // 身分證字號：第一碼固定英文（自動轉大寫），總長 10 碼，後 9 碼僅允許數字；不做規則檢查
+        (function setupLaborerIdMask(){
+            const input = document.getElementById('laborer-id');
+            if (!input) return;
+            const sanitize = (raw) => {
+                const s = (raw || '').toString().toUpperCase().replace(/\s+/g,'');
+                let first = '';
+                let digits = '';
+                for (let i = 0; i < s.length; i++) {
+                    const ch = s[i];
+                    if (!first && /[A-Z]/.test(ch)) { first = ch; continue; }
+                    if (/[0-9]/.test(ch) && digits.length < 9) { digits += ch; }
+                    if (first && digits.length >= 9) break;
+                }
+                return (first + digits).slice(0, 10);
+            };
+            const apply = () => { input.value = sanitize(input.value); };
+            input.addEventListener('input', apply);
+            input.addEventListener('blur', apply);
+        })();
+        
+        function updateButtonsForTab(activeTabId, currentClaimType) {
+            const isEditableTab = ['tab-basic', 'tab-beneficiary', 'tab-case-notes'].includes(activeTabId);
+
+            document.getElementById('btn-confirm').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-print-checklist').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-prepare-approval').style.display = isEditableTab ? '' : 'none';
+            document.getElementById('btn-cancel-case').style.display = isEditableTab ? '' : 'none';
+            
+            document.getElementById('btn-print-pdf').style.display = isEditableTab ? 'none' : '';
+
+            const isBeneficiaryTab = activeTabId === 'tab-beneficiary';
+            const isDeathClaimType = ['51', '52', '53'].includes(currentClaimType);
+            document.getElementById('btn-split-amount').style.display = (isBeneficiaryTab && isDeathClaimType) ? '' : 'none';
+        }
+
+        function updateTabLinks() {
+            const currentCaseId = state.caseId;
+            const currentClaimType = demoSwitcher.value;
+
+            document.querySelectorAll('#myTab .nav-link').forEach(tabLink => {
+                const baseHref = tabLink.getAttribute('href').split('?')[0];
+                if (baseHref === '#' || !baseHref) return;
+                
+                const params = new URLSearchParams();
+                params.set('claimType', currentClaimType);
+                if (currentCaseId) {
+                   params.set('caseId', currentCaseId);
+                }
+                
+                tabLink.setAttribute('href', `${baseHref}?${params.toString()}`);
+            });
+        }
+
+        function isGlobalDirty() {
+            try { return sessionStorage.getItem('op6_edit_dirty_any') === 'true'; } catch(e) { return false; }
+        }
+
+        function updatePrintChecklistAvailability() {
+            const btn = document.getElementById('btn-print-checklist');
+            if (!btn) return;
+            const hasErrors = !!document.querySelector('#pane-basic .error-message');
+            const enabled = !!(state && state.isReAdjudicated && !isFormDirty && !isGlobalDirty() && !hasErrors);
+            btn.disabled = !enabled;
+        }
+
+        demoSwitcher.addEventListener('change', function() {
+            const newClaimType = this.value;
+            state = createNewState(newClaimType, state.caseId);
+            sessionStorage.setItem(storageKey, JSON.stringify(state));
+            updateUIFromLoadedState();
+            updateTabLinks();
+            if (typeof updatePrintChecklistAvailability === 'function') updatePrintChecklistAvailability();
+        });
+
+        document.querySelectorAll('#pane-basic input, #pane-basic select').forEach(input => {
+            input.addEventListener('change', saveState);
+            input.addEventListener('input', function(){
+                // 對關鍵四欄位即時暫存，其他欄位僅標記髒
+                const id = this.id;
+                if (id==='laborer-name' || id==='laborer-id' || id==='laborer-dob' || id==='apply-date') {
+                    saveState();
+                } else {
+                    markDirty();
+                }
+            });
+            input.addEventListener('blur', function(){
+                const id = this.id;
+                if (id==='laborer-name' || id==='laborer-id' || id==='laborer-dob' || id==='apply-date') {
+                    saveState();
+                } else {
+                    markDirty();
+                }
+            });
+            // Enter 導向下一個可輸入元件
+            input.addEventListener('keydown', function(e){
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const focusables = Array.from(document.querySelectorAll('#pane-basic input, #pane-basic select'))
+                        .filter(el => !el.disabled && el.offsetParent !== null);
+                    const idx = focusables.indexOf(this);
+                    if (idx >= 0 && idx < focusables.length - 1) {
+                        focusables[idx + 1].focus();
+                    }
+                }
+            });
+        });
+        
+        document.getElementById('btn-return').addEventListener('click', () => {
+             const globalDirty = (function(){ try { return sessionStorage.getItem('op6_edit_dirty_any') === 'true'; } catch(e) { return false; }})();
+             if (isFormDirty || globalDirty) {
+                 if (!confirm('您有未儲存的變更，是否確定要離開？')) { return; }
+             }
+             try {
+                const ct = state.demoClaimType || demoSwitcher.value || claimTypeFromUrl || '';
+                const cid = state.caseId || caseIdFromUrl || '';
+                const params = new URLSearchParams();
+                if (ct) params.set('claimType', ct);
+                if (cid) params.set('caseId', cid);
+                const suffix = params.toString();
+                window.location.href = suffix ? `op6.html?${suffix}` : 'op6.html';
+             } catch(e) { window.location.href = 'op6.html'; }
+        });
+        
+        document.getElementById('btn-confirm').addEventListener('click', () => {
+            // 與 op6_edit8 一致：先清除錯誤、做頁面驗證
+            if (typeof clearAllErrors === 'function') { try { clearAllErrors(); } catch(e) {} }
+            const v = validateBasicVisibleFields(true);
+            if (v && v.hasError) { return; }
+
+            // 加回跨頁必要檢核：民法繼承案件需至少 1 位繼承人（請領種類 51/52/53）
+            try {
+                const currentClaimType = (state && state.demoClaimType) || demoSwitcher.value || claimTypeFromUrl || '';
+                const needHeir = ['31','41','43','51', '52', '53'].includes(currentClaimType);
+                const inheritanceChecked = !!document.getElementById('civil-law-inheritance')?.checked;
+                if (needHeir && inheritanceChecked) {
+                    const currentCaseId = (state && state.caseId) || caseIdFromUrl || '';
+                    const heirCountKey = currentCaseId ? `op6_heir_count_${currentCaseId}` : '';
+                    let heirCount = 0;
+                    try { if (heirCountKey) { heirCount = parseInt(sessionStorage.getItem(heirCountKey) || '0', 10) || 0; } } catch(e) {}
+                    if (heirCount <= 0) {
+                        alert('已勾選「民法繼承案件」，需先於「受款人」頁籤新增至少 1 位繼承人。系統將帶您前往新增。');
+                        const params = new URLSearchParams();
+                        if (currentClaimType) params.set('claimType', currentClaimType);
+                        if (currentCaseId) params.set('caseId', currentCaseId);
+                        window.location.href = `op6_edit2.html?${params.toString()}`;
+                        return;
+                    }
+                }
+            } catch(e) { /* ignore cross-tab check errors */ }
+
+            if (confirm('是否要完成重新編審？')) {
+                // 版次+1、設定已重新編審並存檔
+                let st;
+                try { st = JSON.parse(sessionStorage.getItem(storageKey)) || state || {}; } catch(e) { st = state || {}; }
+                st.version = (parseInt(st.version, 10) || 0) + 1;
+                st.isReAdjudicated = true;
+                try { sessionStorage.setItem(storageKey, JSON.stringify(st)); } catch(e) {}
+                state = st;
+
+                isFormDirty = false;
+                try { sessionStorage.setItem('op6_edit_dirty_any', 'false'); } catch(e) {}
+                alert('已重新編審完成!');
+                location.reload();
+            }
+        });
+
+        // 【新增】點擊頁籤時強制儲存，確保資料同步
+        document.querySelectorAll('#myTab .nav-link').forEach(tabLink => {
+            tabLink.addEventListener('click', saveState);
+        });
+
+        // 民法繼承案件：取消勾選提示（首次勾選不即時導頁，改在按下「確認」時檢核）
+        (function setupInheritanceBehavior(){
+            const chk = document.getElementById('civil-law-inheritance');
+            if (!chk) return;
+            chk.addEventListener('change', function(){
+                const currentCaseId = state.caseId || caseIdFromUrl || '';
+                const heirCountKey = currentCaseId ? `op6_heir_count_${currentCaseId}` : '';
+                let heirCount = 0;
+                try { if (heirCountKey) { heirCount = parseInt(sessionStorage.getItem(heirCountKey) || '0', 10) || 0; } } catch(e) {}
+                if (!this.checked) {
+                    // 取消勾選且已有繼承人 → 提示確認（不刪既有資料）
+                    if (heirCount > 0) {
+                        const ok = confirm('取消「民法繼承案件」將不再視為繼承案件（不會刪除既有繼承人資料）。是否確認？');
+                        if (!ok) { this.checked = true; }
+                    }
+                }
+            });
+        })();
+
+        // 審核/註銷 提示
+        const btnPrepare = document.getElementById('btn-prepare-approval');
+        if (btnPrepare) {
+            btnPrepare.addEventListener('click', () => {
+                try {
+                    if (document.querySelector('#pane-basic .error-message')) {
+                        alert('目前頁面存在驗證錯誤，請先修正後再進行審核。');
+                        return;
+                    }
+                    const crossTabDirty = sessionStorage.getItem('op6_edit_dirty_any') === 'true';
+                    const saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+                    const hasConfirmed = !!saved.isReAdjudicated;
+                    if (isFormDirty || crossTabDirty || !hasConfirmed) {
+                        alert('版本不一致，無法進行初核核定。請先按下「確認」完成重新編審。');
+                        return;
+                    }
+                } catch (e) {}
+                if (confirm('是否確認進行審核？')) {
+                    alert('已送出審核。');
+                }
+            });
+        }
+        const btnCancel = document.getElementById('btn-cancel-case');
+        if (btnCancel) {
+            btnCancel.addEventListener('click', () => {
+                if (document.querySelector('#pane-basic .error-message')) {
+                    alert('目前頁面存在驗證錯誤，請先修正後再進行註銷。');
+                    return;
+                }
+                if (confirm('即將註銷本受理案件，是否確認註銷？')) {
+                    alert('案件已標記為註銷。');
+                }
+            });
+        }
+
+        // 受理審核清單列印（依規則啟用/禁用；啟用時點擊列印）
+        const btnChecklist = document.getElementById('btn-print-checklist');
+        if (btnChecklist) {
+            updatePrintChecklistAvailability();
+            btnChecklist.addEventListener('click', () => { if (!btnChecklist.disabled) window.print(); });
+        }
+
+        // Initial Page Load
+        loadState();
+        sessionStorage.setItem(storageKey, JSON.stringify(state));
+        updateUIFromLoadedState();
+        updateTabLinks();
+        updatePrintChecklistAvailability();
+    });
+    </script>
+</body>
+</html>
